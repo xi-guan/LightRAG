@@ -82,8 +82,8 @@ def setup_signal_handlers():
     """Setup signal handlers for graceful shutdown"""
 
     def signal_handler(sig, frame):
-        print(f"\n\nReceived signal {sig}, shutting down gracefully...")
-        print(f"Process ID: {os.getpid()}")
+        logger.info(f"\n\nReceived signal {sig}, shutting down gracefully...")
+        logger.info(f"Process ID: {os.getpid()}")
 
         # Release shared resources
         finalize_share_data()
@@ -842,7 +842,7 @@ def configure_logging():
     log_dir = os.getenv("LOG_DIR", os.getcwd())
     log_file_path = os.path.abspath(os.path.join(log_dir, DEFAULT_LOG_FILENAME))
 
-    print(f"\nLightRAG log file: {log_file_path}\n")
+    logger.info(f"LightRAG log file: {log_file_path}")
     os.makedirs(os.path.dirname(log_dir), exist_ok=True)
 
     # Get log file max size and backup count from environment variables
@@ -921,16 +921,16 @@ def check_and_install_dependencies():
 
     for package in required_packages:
         if not pm.is_installed(package):
-            print(f"Installing {package}...")
+            logger.info(f"Installing {package}...")
             pm.install(package)
-            print(f"{package} installed successfully")
+            logger.info(f"{package} installed successfully")
 
 
 def main():
     # Check if running under Gunicorn
     if "GUNICORN_CMD_ARGS" in os.environ:
         # If started with Gunicorn, return directly as Gunicorn will call get_application
-        print("Running under Gunicorn - worker management handled by Gunicorn")
+        logger.info("Running under Gunicorn - worker management handled by Gunicorn")
         return
 
     # Check .env file
@@ -971,7 +971,7 @@ def main():
             }
         )
 
-    print(
+    logger.info(
         f"Starting Uvicorn server in single-process mode on {global_args.host}:{global_args.port}"
     )
     uvicorn.run(**uvicorn_config)
