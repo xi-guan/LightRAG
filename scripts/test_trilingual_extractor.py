@@ -157,12 +157,8 @@ def test_performance():
 
     # 测试文本
     test_data = {
-        "zh": [
-            "苹果公司由史蒂夫·乔布斯在加利福尼亚州创立。" * 10
-        ] * 10,  # 10 个文档
-        "en": [
-            "Apple Inc. was founded by Steve Jobs in California." * 10
-        ] * 10,
+        "zh": ["苹果公司由史蒂夫·乔布斯在加利福尼亚州创立。" * 10] * 10,  # 10 个文档
+        "en": ["Apple Inc. was founded by Steve Jobs in California." * 10] * 10,
         "sv": ["Volvo grundades av Assar Gabrielsson i Göteborg." * 10] * 10,
     }
 

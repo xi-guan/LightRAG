@@ -12,7 +12,7 @@
 - 简单易用
 """
 
-from typing import List, Dict, Literal, Optional
+from typing import List, Dict, Literal
 import logging
 
 logger = logging.getLogger(__name__)
@@ -34,6 +34,7 @@ class TrilingualEntityExtractor:
             logger.info("Loading English spaCy model (en_core_web_trf)...")
             try:
                 import spacy
+
                 self._spacy_en = spacy.load("en_core_web_trf")
                 logger.info("✓ English model loaded successfully")
             except OSError:
@@ -51,6 +52,7 @@ class TrilingualEntityExtractor:
             logger.info("Loading Swedish spaCy model (sv_core_news_lg)...")
             try:
                 import spacy
+
                 self._spacy_sv = spacy.load("sv_core_news_lg")
                 logger.info("✓ Swedish model loaded successfully")
             except OSError:
@@ -68,6 +70,7 @@ class TrilingualEntityExtractor:
             logger.info("Loading Chinese HanLP model...")
             try:
                 import hanlp
+
                 self._hanlp = hanlp.load(
                     hanlp.pretrained.mtl.CLOSE_TOK_POS_NER_SRL_DEP_SDP_CON_ELECTRA_BASE_ZH
                 )

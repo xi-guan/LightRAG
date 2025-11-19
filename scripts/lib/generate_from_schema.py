@@ -10,14 +10,14 @@ import sys
 import secrets
 import string
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 import yaml
 
 
 def generate_secret(length: int = 32) -> str:
     """生成随机密钥"""
     alphabet = string.ascii_letters + string.digits
-    return ''.join(secrets.choice(alphabet) for _ in range(length))
+    return "".join(secrets.choice(alphabet) for _ in range(length))
 
 
 def set_nested_value(data: Dict, path: str, value: Any) -> None:
@@ -29,7 +29,7 @@ def set_nested_value(data: Dict, path: str, value: Any) -> None:
         path: 点分隔的路径，如 "trilingual.chinese.enabled"
         value: 要设置的值
     """
-    keys = path.split('.')
+    keys = path.split(".")
     current = data
 
     for key in keys[:-1]:
@@ -52,7 +52,7 @@ def get_nested_value(data: Dict, path: str, default: Any = None) -> Any:
     Returns:
         找到的值或默认值
     """
-    keys = path.split('.')
+    keys = path.split(".")
     current = data
 
     try:
@@ -106,15 +106,15 @@ def infer_type(value: Any) -> Any:
     elif isinstance(value, str):
         # 尝试转换为数字
         try:
-            if '.' in value:
+            if "." in value:
                 return float(value)
             else:
                 return int(value)
         except ValueError:
             # 尝试转换为布尔值
-            if value.lower() in ('true', 'yes', 'on'):
+            if value.lower() in ("true", "yes", "on"):
                 return True
-            elif value.lower() in ('false', 'no', 'off'):
+            elif value.lower() in ("false", "no", "off"):
                 return False
             return value
     else:
@@ -134,7 +134,7 @@ def load_schema(schema_path: Path) -> List[Dict]:
     if not schema_path.exists():
         raise FileNotFoundError(f"Schema 文件不存在: {schema_path}")
 
-    with open(schema_path, 'r', encoding='utf-8') as f:
+    with open(schema_path, "r", encoding="utf-8") as f:
         schema = yaml.safe_load(f)
 
     if not isinstance(schema, list):
@@ -156,7 +156,7 @@ def load_existing_config(config_path: Path) -> Dict:
     if not config_path.exists():
         return {}
 
-    with open(config_path, 'r', encoding='utf-8') as f:
+    with open(config_path, "r", encoding="utf-8") as f:
         config = yaml.safe_load(f)
 
     return config if config else {}
@@ -176,7 +176,7 @@ def generate_config(schema: List[Dict], existing_config: Dict) -> Dict:
     config = {}
 
     for field in schema:
-        section = field.get('section')
+        section = field.get("section")
         if not section:
             continue
 
@@ -188,11 +188,11 @@ def generate_config(schema: List[Dict], existing_config: Dict) -> Dict:
             set_nested_value(config, section, existing_value)
         else:
             # 生成新值
-            field_type = field.get('type', '')
-            auto_generate = field.get('auto_generate', False)
-            default_value = field.get('default')
+            field_type = field.get("type", "")
+            auto_generate = field.get("auto_generate", False)
+            default_value = field.get("default")
 
-            if field_type == 'secret' and auto_generate:
+            if field_type == "secret" and auto_generate:
                 # 自动生成密钥
                 value = generate_secret(32)
             elif default_value is not None:
@@ -218,14 +218,14 @@ def save_config(config: Dict, config_path: Path) -> None:
     # 确保目录存在
     config_path.parent.mkdir(parents=True, exist_ok=True)
 
-    with open(config_path, 'w', encoding='utf-8') as f:
+    with open(config_path, "w", encoding="utf-8") as f:
         yaml.dump(
             config,
             f,
             default_flow_style=False,
             allow_unicode=True,
             sort_keys=False,
-            indent=2
+            indent=2,
         )
 
 
@@ -235,8 +235,8 @@ def main():
     project_root = Path(__file__).parent.parent.parent
 
     # 文件路径
-    schema_path = project_root / 'config' / 'config.schema.yaml'
-    config_path = project_root / 'config' / 'local.yaml'
+    schema_path = project_root / "config" / "config.schema.yaml"
+    config_path = project_root / "config" / "local.yaml"
 
     print("=" * 70)
     print("  配置生成器")
@@ -254,12 +254,12 @@ def main():
         existing_config = load_existing_config(config_path)
 
         if existing_config:
-            print(f"   找到现有配置，将保留已有值")
+            print("   找到现有配置，将保留已有值")
         else:
-            print(f"   未找到现有配置，将使用默认值")
+            print("   未找到现有配置，将使用默认值")
 
         # 生成配置
-        print(f"\n⚙️  生成配置...")
+        print("\n⚙️  生成配置...")
         config = generate_config(schema, existing_config)
 
         # 深度合并（保留现有配置中 schema 未定义的字段）
@@ -286,9 +286,10 @@ def main():
     except Exception as e:
         print(f"\n❌ 错误: {e}", file=sys.stderr)
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

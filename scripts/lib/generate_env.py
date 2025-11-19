@@ -8,11 +8,11 @@
 
 import sys
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict
 import yaml
 
 
-def flatten_dict(data: Dict, parent_key: str = '', sep: str = '_') -> Dict[str, Any]:
+def flatten_dict(data: Dict, parent_key: str = "", sep: str = "_") -> Dict[str, Any]:
     """
     扁平化嵌套字典
 
@@ -58,18 +58,18 @@ def format_env_value(value: Any) -> str:
         'hello world' -> 'hello world'
     """
     if isinstance(value, bool):
-        return 'true' if value else 'false'
+        return "true" if value else "false"
     elif isinstance(value, (int, float)):
         return str(value)
     elif isinstance(value, str):
         # 如果字符串包含空格或特殊字符，添加引号
-        if ' ' in value or any(c in value for c in ['#', '$', '&', '|', ';']):
+        if " " in value or any(c in value for c in ["#", "$", "&", "|", ";"]):
             # 转义内部引号
             escaped = value.replace('"', '\\"')
             return f'"{escaped}"'
         return value
     elif value is None:
-        return ''
+        return ""
     else:
         return str(value)
 
@@ -87,7 +87,7 @@ def load_config(config_path: Path) -> Dict:
     if not config_path.exists():
         raise FileNotFoundError(f"配置文件不存在: {config_path}")
 
-    with open(config_path, 'r', encoding='utf-8') as f:
+    with open(config_path, "r", encoding="utf-8") as f:
         config = yaml.safe_load(f)
 
     return config if config else {}
@@ -121,7 +121,7 @@ def generate_env_content(config: Dict) -> str:
 
     for key, value in sorted_items:
         # 提取顶级 section（第一个下划线之前的部分）
-        section = key.split('_')[0]
+        section = key.split("_")[0]
 
         # 如果切换到新 section，添加分隔注释
         if section != current_section:
@@ -134,7 +134,7 @@ def generate_env_content(config: Dict) -> str:
         formatted_value = format_env_value(value)
         lines.append(f"{key}={formatted_value}")
 
-    return '\n'.join(lines) + '\n'
+    return "\n".join(lines) + "\n"
 
 
 def save_env_file(content: str, env_path: Path) -> None:
@@ -145,7 +145,7 @@ def save_env_file(content: str, env_path: Path) -> None:
         content: .env 文件内容
         env_path: 输出文件路径
     """
-    with open(env_path, 'w', encoding='utf-8') as f:
+    with open(env_path, "w", encoding="utf-8") as f:
         f.write(content)
 
 
@@ -155,8 +155,8 @@ def main():
     project_root = Path(__file__).parent.parent.parent
 
     # 文件路径
-    config_path = project_root / 'config' / 'local.yaml'
-    env_path = project_root / '.env'
+    config_path = project_root / "config" / "local.yaml"
+    env_path = project_root / ".env"
 
     print("=" * 70)
     print("  环境变量生成器")
@@ -170,11 +170,11 @@ def main():
         print(f"   找到 {len(config)} 个顶级配置节")
 
         # 生成 .env 内容
-        print(f"\n⚙️  生成环境变量...")
+        print("\n⚙️  生成环境变量...")
         env_content = generate_env_content(config)
 
         # 统计生成的环境变量数量
-        env_count = len([line for line in env_content.split('\n') if '=' in line])
+        env_count = len([line for line in env_content.split("\n") if "=" in line])
         print(f"   生成 {env_count} 个环境变量")
 
         # 保存 .env 文件
@@ -198,9 +198,10 @@ def main():
     except Exception as e:
         print(f"\n❌ 错误: {e}", file=sys.stderr)
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
