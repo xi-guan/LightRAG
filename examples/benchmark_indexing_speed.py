@@ -156,7 +156,7 @@ def main():
     print()
     try:
         num_docs = int(input("输入测试文档数量 (建议 50-100): ") or "50")
-    except:
+    except (ValueError, KeyboardInterrupt, EOFError):
         num_docs = 50
 
     print()

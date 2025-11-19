@@ -199,7 +199,7 @@ def main():
 
     try:
         choice = input("\n选择 (1-3): ").strip() or "1"
-    except:
+    except (KeyboardInterrupt, EOFError):
         choice = "1"
 
     # 选择提取器
@@ -211,7 +211,7 @@ def main():
     try:
         extractor = input("\n选择 (1-2): ").strip() or "1"
         use_trilingual = extractor == "1"
-    except:
+    except (KeyboardInterrupt, EOFError):
         use_trilingual = True
 
     if choice == "1":
@@ -225,7 +225,7 @@ def main():
             else:
                 print("\n使用默认示例文档...")
                 upload_document(server_url, sample_documents[0], "zh", use_trilingual)
-        except:
+        except (KeyboardInterrupt, EOFError):
             print("\n使用默认示例文档...")
             upload_document(server_url, sample_documents[0], "zh", use_trilingual)
 
