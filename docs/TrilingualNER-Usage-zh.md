@@ -24,33 +24,56 @@ LightRAG 三语言实体提取器支持**中文、英文、瑞典语**，使用�
 
 ## 安装
 
-### 方法 1: 一键安装（推荐）
+### 方法 1: 使用 UV（推荐，超快速！）
 
 ```bash
-# 运行安装脚本
+cd /path/to/LightRAG
+
+# 1. 安装 UV（如果还未安装）
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# 2. 安装三语言依赖
+uv sync --extra trilingual
+
+# 3. 下载语言模型
+./scripts/install_trilingual_models.sh
+```
+
+**速度**: 比 pip 快 **10-100 倍**！
+
+参考: [UV 快速入门指南](./UVQuickStart-zh.md)
+
+### 方法 2: 一键安装脚本
+
+```bash
+# 运行安装脚本（自动检测 UV）
 cd /path/to/LightRAG
 ./scripts/install_trilingual_models.sh
 ```
 
 这会自动：
-1. 安装 spaCy 和 HanLP
-2. 下载英文模型 (~440 MB)
-3. 下载瑞典语模型 (~545 MB)
-4. 提示 HanLP 中文模型会在首次使用时下载 (~400 MB)
+1. 检测 UV（如果可用则使用 UV，否则使用 pip）
+2. 安装 spaCy 和 HanLP
+3. 下载英文模型 (~440 MB)
+4. 下载瑞典语模型 (~545 MB)
+5. 提示 HanLP 中文模型会在首次使用时下载 (~400 MB)
 
 **总磁盘空间**: ~1.4 GB
 
-### 方法 2: 手动安装
+### 方法 3: 手动安装
 
 ```bash
-# 1. 安装 Python 依赖
-pip install -r requirements-trilingual.txt
+# 使用 UV
+uv pip install -e ".[trilingual]"
+python -m spacy download en_core_web_trf
+python -m spacy download sv_core_news_lg
 
-# 2. 下载 spaCy 模型
+# 或使用 pip
+pip install -r requirements-trilingual.txt
 python -m spacy download en_core_web_trf  # 英文
 python -m spacy download sv_core_news_lg  # 瑞典语
 
-# 3. HanLP 会在首次使用时自动下载
+# HanLP 会在首次使用时自动下载
 ```
 
 ---

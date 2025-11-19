@@ -26,10 +26,32 @@ config.schema.yaml → config/local.yaml → .env
 
 ## 快速开始
 
-### 1. 初始化配置
+### 方法 1: 使用 UV（推荐）
 
 ```bash
 cd /path/to/LightRAG
+
+# 1. 安装 UV（如果还未安装）
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# 2. 安装依赖
+uv sync
+
+# 3. 初始化配置
+./scripts/setup.sh
+```
+
+**优势**: UV 比 pip 快 10-100 倍！参考: [UV 快速入门指南](./UVQuickStart-zh.md)
+
+### 方法 2: 传统方式
+
+```bash
+cd /path/to/LightRAG
+
+# 1. 安装依赖
+pip install -e .
+
+# 2. 初始化配置
 ./scripts/setup.sh
 ```
 

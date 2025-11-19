@@ -20,7 +20,18 @@ echo ""
 echo "📦 安装 Python 依赖包..."
 echo "   - spaCy (英文 + 瑞典语)"
 echo "   - HanLP (中文)"
-pip install -r requirements-trilingual.txt
+echo ""
+
+# 检查是否安装了 uv
+if command -v uv &> /dev/null; then
+    echo "   使用 uv 安装 (超快速!)..."
+    uv pip install -e ".[trilingual]"
+else
+    echo "   使用 pip 安装..."
+    echo "   💡 提示: 安装 uv 可获得 10-100 倍速度提升"
+    echo "      curl -LsSf https://astral.sh/uv/install.sh | sh"
+    pip install -r requirements-trilingual.txt
+fi
 
 # 下载 spaCy 英文模型
 echo ""

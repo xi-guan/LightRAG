@@ -17,6 +17,9 @@ venv/
 # Configuration Files (generated from schema)
 config/local.yaml
 
+# UV lock file (library project - users should generate their own)
+uv.lock
+
 # Build / Distribution
 dist/
 build/
