@@ -176,6 +176,18 @@
   default: false
   description: "Use trilingual extractor instead of LLM (requires setup)"
 
+- section: lightrag.entity_extraction.auto_detect_language
+  default: true
+  description: "Auto-detect document language for trilingual extractor"
+
+- section: lightrag.entity_extraction.fallback_to_llm
+  default: true
+  description: "Fallback to LLM extraction if trilingual fails or unsupported language"
+
+- section: lightrag.entity_extraction.default_language
+  default: "en"
+  description: "Default language for trilingual extractor if auto-detect disabled (zh/en/sv)"
+
 # 关系提取配置
 - section: lightrag.relation_extraction.enabled
   default: true

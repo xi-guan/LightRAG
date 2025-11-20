@@ -425,6 +425,35 @@ class LightRAG:
         }
     )
 
+    # Custom Entity Extraction
+    # ---
+
+    entity_extractor: Optional[Any] = field(default=None)
+    """
+    Custom entity extractor to replace LLM-based extraction.
+
+    If provided, this extractor will be used instead of LLM for entity extraction.
+    The extractor must implement an `extract()` method that takes:
+        - text (str): The text to extract entities from
+        - language (str): Language code (e.g., 'zh', 'en', 'sv')
+
+    And returns a list of dictionaries with keys:
+        - entity (str): The entity text
+        - type (str): The entity type (e.g., 'PERSON', 'ORG', 'LOC')
+
+    Example:
+        from lightrag.kg.trilingual_entity_extractor import TrilingualEntityExtractor
+        rag = LightRAG(entity_extractor=TrilingualEntityExtractor())
+    """
+
+    use_llm_extraction_fallback: bool = field(default=True)
+    """
+    If True and entity_extractor is provided, fallback to LLM extraction when:
+        - Custom extractor fails
+        - Language is not supported by custom extractor
+        - No entities are found by custom extractor
+    """
+
     # Storages Management
     # ---
 

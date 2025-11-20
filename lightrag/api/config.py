@@ -399,6 +399,20 @@ def parse_args() -> argparse.Namespace:
     args.entity_types = get_env_value("ENTITY_TYPES", DEFAULT_ENTITY_TYPES, list)
     args.whitelist_paths = get_env_value("WHITELIST_PATHS", "/health,/api/*")
 
+    # Trilingual entity extractor configuration
+    args.use_trilingual_extractor = get_env_value(
+        "USE_TRILINGUAL_EXTRACTOR", False, bool
+    )
+    args.trilingual_auto_detect_language = get_env_value(
+        "TRILINGUAL_AUTO_DETECT_LANGUAGE", True, bool
+    )
+    args.trilingual_fallback_to_llm = get_env_value(
+        "TRILINGUAL_FALLBACK_TO_LLM", True, bool
+    )
+    args.trilingual_default_language = get_env_value(
+        "TRILINGUAL_DEFAULT_LANGUAGE", "en"
+    )
+
     # For JWT Auth
     args.auth_accounts = get_env_value("AUTH_ACCOUNTS", "")
     args.token_secret = get_env_value("TOKEN_SECRET", "lightrag-jwt-default-secret")

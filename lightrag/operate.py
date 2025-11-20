@@ -2751,6 +2751,88 @@ async def merge_nodes_and_edges(
         pipeline_status["history_messages"].append(log_message)
 
 
+def _convert_custom_extractor_output_to_llm_format(
+    entities: list[dict],
+    tuple_delimiter: str = "<|#|>",
+    completion_delimiter: str = "<|COMPLETE|>",
+) -> str:
+    """
+    Convert custom entity extractor output to LLM output format.
+
+    Args:
+        entities: List of dicts with keys: 'entity', 'type'
+        tuple_delimiter: Delimiter between fields (default: "<|#|>")
+        completion_delimiter: Delimiter for completion (default: "<|COMPLETE|>")
+
+    Returns:
+        String formatted as LLM output for entity extraction
+
+    Example Input:
+        [
+            {"entity": "Apple Inc.", "type": "ORG"},
+            {"entity": "Tim Cook", "type": "PERSON"}
+        ]
+
+    Example Output:
+        entity<|#|>Apple Inc.<|#|>organization<|#|>Apple Inc. is an organization
+        entity<|#|>Tim Cook<|#|>person<|#|>Tim Cook is a person
+        <|COMPLETE|>
+    """
+    if not entities:
+        return completion_delimiter
+
+    # Map common NER types to LightRAG types
+    type_mapping = {
+        "PERSON": "person",
+        "PER": "person",
+        "ORG": "organization",
+        "ORGANIZATION": "organization",
+        "GPE": "location",
+        "LOC": "location",
+        "LOCATION": "location",
+        "FAC": "location",
+        "FACILITY": "location",
+        "DATE": "event",
+        "TIME": "event",
+        "EVENT": "event",
+        "PRODUCT": "technology",
+        "WORK_OF_ART": "technology",
+        "NORP": "organization",
+        "QUANTITY": "other",
+        "CARDINAL": "other",
+        "ORDINAL": "other",
+        "MONEY": "other",
+        "PERCENT": "other",
+    }
+
+    lines = []
+    for ent in entities:
+        entity_name = ent.get("entity", "").strip()
+        entity_type = ent.get("type", "Other").upper()
+
+        if not entity_name:
+            continue
+
+        # Map to standard type
+        mapped_type = type_mapping.get(entity_type, "other")
+
+        # Generate simple description
+        description = f"{entity_name} is a {mapped_type}"
+
+        # Format: entity<|#|>entity_name<|#|>entity_type<|#|>entity_description
+        line = f"entity{tuple_delimiter}{entity_name}{tuple_delimiter}{mapped_type}{tuple_delimiter}{description}"
+        lines.append(line)
+
+    # Join all lines and add completion delimiter
+    result = "\n".join(lines)
+    if result:
+        result += f"\n{completion_delimiter}"
+    else:
+        result = completion_delimiter
+
+    return result
+
+
 async def extract_entities(
     chunks: dict[str, TextChunkSchema],
     global_config: dict[str, str],
@@ -2769,6 +2851,10 @@ async def extract_entities(
 
     use_llm_func: callable = global_config["llm_model_func"]
     entity_extract_max_gleaning = global_config["entity_extract_max_gleaning"]
+
+    # Check if custom entity extractor is provided
+    custom_extractor = global_config.get("entity_extractor")
+    use_llm_fallback = global_config.get("use_llm_extraction_fallback", True)
 
     ordered_chunks = list(chunks.items())
     # add language and example number params to prompt
@@ -2817,30 +2903,80 @@ async def extract_entities(
         # Create cache keys collector for batch processing
         cache_keys_collector = []
 
-        # Get initial extraction
-        entity_extraction_system_prompt = PROMPTS[
-            "entity_extraction_system_prompt"
-        ].format(**{**context_base, "input_text": content})
-        entity_extraction_user_prompt = PROMPTS["entity_extraction_user_prompt"].format(
-            **{**context_base, "input_text": content}
-        )
-        entity_continue_extraction_user_prompt = PROMPTS[
-            "entity_continue_extraction_user_prompt"
-        ].format(**{**context_base, "input_text": content})
+        # Try custom extractor first if available
+        use_custom_extraction = False
+        if custom_extractor is not None:
+            try:
+                import time
 
-        final_result, timestamp = await use_llm_func_with_cache(
-            entity_extraction_user_prompt,
-            use_llm_func,
-            system_prompt=entity_extraction_system_prompt,
-            llm_response_cache=llm_response_cache,
-            cache_type="extract",
-            chunk_id=chunk_key,
-            cache_keys_collector=cache_keys_collector,
-        )
+                timestamp = int(time.time())
+                # Call custom extractor
+                entities = custom_extractor.extract(content, language=language)
 
-        history = pack_user_ass_to_openai_messages(
-            entity_extraction_user_prompt, final_result
-        )
+                if entities and len(entities) > 0:
+                    # Convert custom extractor output to LLM format
+                    final_result = _convert_custom_extractor_output_to_llm_format(
+                        entities,
+                        tuple_delimiter=context_base["tuple_delimiter"],
+                        completion_delimiter=context_base["completion_delimiter"],
+                    )
+                    use_custom_extraction = True
+                    logger.debug(
+                        f"{chunk_key}: Custom extractor found {len(entities)} entities"
+                    )
+                elif not use_llm_fallback:
+                    # No entities found and no fallback, return empty result
+                    final_result = context_base["completion_delimiter"]
+                    use_custom_extraction = True
+                    logger.warning(
+                        f"{chunk_key}: Custom extractor found no entities and fallback is disabled"
+                    )
+            except Exception as e:
+                if use_llm_fallback:
+                    logger.warning(
+                        f"{chunk_key}: Custom extractor failed, falling back to LLM: {e}"
+                    )
+                else:
+                    logger.error(
+                        f"{chunk_key}: Custom extractor failed and fallback is disabled: {e}"
+                    )
+                    raise
+
+        # Use LLM extraction if custom extractor is not used
+        if not use_custom_extraction:
+            # Get initial extraction
+            entity_extraction_system_prompt = PROMPTS[
+                "entity_extraction_system_prompt"
+            ].format(**{**context_base, "input_text": content})
+            entity_extraction_user_prompt = PROMPTS[
+                "entity_extraction_user_prompt"
+            ].format(**{**context_base, "input_text": content})
+            entity_continue_extraction_user_prompt = PROMPTS[
+                "entity_continue_extraction_user_prompt"
+            ].format(**{**context_base, "input_text": content})
+
+            final_result, timestamp = await use_llm_func_with_cache(
+                entity_extraction_user_prompt,
+                use_llm_func,
+                system_prompt=entity_extraction_system_prompt,
+                llm_response_cache=llm_response_cache,
+                cache_type="extract",
+                chunk_id=chunk_key,
+                cache_keys_collector=cache_keys_collector,
+            )
+        else:
+            # For custom extraction, we already have final_result and timestamp
+            entity_extraction_user_prompt = None
+            entity_extraction_system_prompt = None
+            entity_continue_extraction_user_prompt = None
+
+        # Only create history for LLM extraction
+        if not use_custom_extraction:
+            history = pack_user_ass_to_openai_messages(
+                entity_extraction_user_prompt, final_result
+            )
+        else:
+            history = []
 
         # Process initial extraction with file path
         maybe_nodes, maybe_edges = await _process_extraction_result(
@@ -2853,7 +2989,8 @@ async def extract_entities(
         )
 
         # Process additional gleaning results only 1 time when entity_extract_max_gleaning is greater than zero.
-        if entity_extract_max_gleaning > 0:
+        # Skip gleaning for custom extractor (not applicable)
+        if entity_extract_max_gleaning > 0 and not use_custom_extraction:
             glean_result, timestamp = await use_llm_func_with_cache(
                 entity_continue_extraction_user_prompt,
                 use_llm_func,
