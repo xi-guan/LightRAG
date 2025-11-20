@@ -1001,29 +1001,17 @@ def create_app(args):
 
             entity_extractor = TrilingualEntityExtractor()
             logger.info("Trilingual entity extractor initialized successfully")
-            logger.info(
-                f"  - Fallback to LLM: {args.trilingual_fallback_to_llm}"
-            )
-            logger.info(
-                f"  - Default language: {args.trilingual_default_language}"
-            )
+            logger.info(f"  - Fallback to LLM: {args.trilingual_fallback_to_llm}")
+            logger.info(f"  - Default language: {args.trilingual_default_language}")
         except ImportError as e:
-            logger.error(
-                f"Failed to import trilingual entity extractor: {e}"
-            )
-            logger.error(
-                "Please install dependencies: uv sync --extra trilingual"
-            )
-            logger.error(
-                "And download models: ./scripts/install_trilingual_models.sh"
-            )
+            logger.error(f"Failed to import trilingual entity extractor: {e}")
+            logger.error("Please install dependencies: uv sync --extra trilingual")
+            logger.error("And download models: ./scripts/install_trilingual_models.sh")
             if not args.trilingual_fallback_to_llm:
                 raise
             logger.warning("Falling back to LLM-based entity extraction")
         except Exception as e:
-            logger.error(
-                f"Failed to initialize trilingual entity extractor: {e}"
-            )
+            logger.error(f"Failed to initialize trilingual entity extractor: {e}")
             if not args.trilingual_fallback_to_llm:
                 raise
             logger.warning("Falling back to LLM-based entity extraction")

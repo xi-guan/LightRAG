@@ -6,7 +6,6 @@
 处理多语言文档并构建知识图谱。
 """
 
-import asyncio
 from lightrag.kg.trilingual_entity_extractor import TrilingualEntityExtractor
 
 
@@ -92,7 +91,7 @@ class MultilingualRAG:
                 print(f"  - {ent['entity']} ({ent['type']})")
 
         print("\n" + "=" * 60)
-        print(f"  知识图谱构建完成")
+        print("  知识图谱构建完成")
         print("=" * 60)
         print(f"\n总实体数: {len(self.knowledge_base['entities'])}")
 
@@ -123,9 +122,7 @@ class MultilingualRAG:
 
         # 简单的实体匹配
         results = [
-            ent
-            for ent in self.knowledge_base["entities"]
-            if ent["text"] in query_texts
+            ent for ent in self.knowledge_base["entities"] if ent["text"] in query_texts
         ]
 
         return results
@@ -224,8 +221,14 @@ def example_search():
 
     # 先构建知识库
     documents = [
-        {"text": "苹果公司的CEO是蒂姆·库克，总部在加利福尼亚州库比蒂诺。", "language": "zh"},
-        {"text": "Apple Inc. CEO Tim Cook leads the company from Cupertino.", "language": "en"},
+        {
+            "text": "苹果公司的CEO是蒂姆·库克，总部在加利福尼亚州库比蒂诺。",
+            "language": "zh",
+        },
+        {
+            "text": "Apple Inc. CEO Tim Cook leads the company from Cupertino.",
+            "language": "en",
+        },
     ]
 
     print("\n构建知识库...")

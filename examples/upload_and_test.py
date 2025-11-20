@@ -28,9 +28,9 @@ def upload_document(server_url, text, language="zh", use_trilingual=True):
     print(f"  上传文档 ({'三语言提取器' if use_trilingual else 'LLM 提取'})")
     print("=" * 70)
 
-    print(f"\n📄 文档内容:")
+    print("\n📄 文档内容:")
     print(f"  {text[:200]}{'...' if len(text) > 200 else ''}")
-    print(f"\n📊 配置:")
+    print("\n📊 配置:")
     print(f"  - 语言: {language}")
     print(f"  - 提取器: {'三语言' if use_trilingual else 'LLM'}")
 
@@ -49,7 +49,7 @@ def upload_document(server_url, text, language="zh", use_trilingual=True):
         if response.status_code == 200:
             result = response.json()
 
-            print(f"\n✅ 上传成功！")
+            print("\n✅ 上传成功！")
             print(f"\n⏱️  耗时: {elapsed_time:.2f} 秒")
 
             # 显示提取的实体
@@ -57,7 +57,9 @@ def upload_document(server_url, text, language="zh", use_trilingual=True):
                 entities = result["entities"]
                 print(f"\n🎯 提取的实体 ({len(entities)} 个):")
                 for i, ent in enumerate(entities[:20], 1):  # 最多显示 20 个
-                    print(f"  {i}. {ent.get('entity', 'N/A')}: {ent.get('type', 'N/A')}")
+                    print(
+                        f"  {i}. {ent.get('entity', 'N/A')}: {ent.get('type', 'N/A')}"
+                    )
                 if len(entities) > 20:
                     print(f"  ... 还有 {len(entities) - 20} 个实体")
 
@@ -66,7 +68,9 @@ def upload_document(server_url, text, language="zh", use_trilingual=True):
                 relations = result["relations"]
                 print(f"\n🔗 提取的关系 ({len(relations)} 个):")
                 for i, rel in enumerate(relations[:10], 1):  # 最多显示 10 个
-                    print(f"  {i}. {rel.get('source', 'N/A')} → {rel.get('relation', 'N/A')} → {rel.get('target', 'N/A')}")
+                    print(
+                        f"  {i}. {rel.get('source', 'N/A')} → {rel.get('relation', 'N/A')} → {rel.get('target', 'N/A')}"
+                    )
                 if len(relations) > 10:
                     print(f"  ... 还有 {len(relations) - 10} 个关系")
 
@@ -135,7 +139,7 @@ def batch_upload(server_url, texts, language="zh", use_trilingual=True):
         if result["success"]:
             print(f"  ✅ 成功 ({result['time']:.2f}s)")
         else:
-            print(f"  ❌ 失败")
+            print("  ❌ 失败")
 
     total_time = time.time() - total_start
 

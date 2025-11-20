@@ -6,7 +6,6 @@ LightRAG Server 三语言实体提取器测试脚本
 """
 
 import requests
-import json
 import time
 import sys
 
@@ -55,7 +54,7 @@ class ServerTester:
 
         data = {"text": text, "language": "zh", "mode": "entity_extraction"}
 
-        print(f"\n输入文本:")
+        print("\n输入文本:")
         print(f"  {text}")
 
         try:
@@ -91,7 +90,7 @@ class ServerTester:
 
         data = {"text": text, "language": "en", "mode": "entity_extraction"}
 
-        print(f"\n输入文本:")
+        print("\n输入文本:")
         print(f"  {text}")
 
         try:
@@ -127,7 +126,7 @@ class ServerTester:
 
         data = {"text": text, "language": "sv", "mode": "entity_extraction"}
 
-        print(f"\n输入文本:")
+        print("\n输入文本:")
         print(f"  {text}")
 
         try:
@@ -186,7 +185,9 @@ class ServerTester:
                 if response.status_code == 200:
                     result = response.json()
                     entities = result.get("entities", [])
-                    print(f"  ✅ {len(entities)} 个实体: {[e['entity'] for e in entities]}")
+                    print(
+                        f"  ✅ {len(entities)} 个实体: {[e['entity'] for e in entities]}"
+                    )
                     results.append(True)
                 else:
                     print(f"  ❌ 失败: {response.status_code}")
@@ -229,7 +230,11 @@ class ServerTester:
                 time.sleep(2)
 
                 # 查询
-                query_data = {"query": "比亚迪在哪里？", "language": "zh", "mode": "query"}
+                query_data = {
+                    "query": "比亚迪在哪里？",
+                    "language": "zh",
+                    "mode": "query",
+                }
 
                 print("\n执行查询:")
                 print(f"  {query_data['query']}")
@@ -294,7 +299,7 @@ class ServerTester:
             min_time = min(times)
             max_time = max(times)
 
-            print(f"\n性能统计:")
+            print("\n性能统计:")
             print(f"  平均响应时间: {avg_time:.3f}s")
             print(f"  最快响应: {min_time:.3f}s")
             print(f"  最慢响应: {max_time:.3f}s")
@@ -318,7 +323,9 @@ def main():
     print("\n提示:")
     print("  - 确保 LightRAG server 已启动")
     print("  - 启动命令: uv run lightrag-server")
-    print("  - 或使用自定义地址: python test_server_trilingual.py http://your-server:port")
+    print(
+        "  - 或使用自定义地址: python test_server_trilingual.py http://your-server:port"
+    )
 
     # 创建测试器
     tester = ServerTester(server_url)

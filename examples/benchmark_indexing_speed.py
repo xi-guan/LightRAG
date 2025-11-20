@@ -46,13 +46,13 @@ def test_indexing_speed(
         :num_documents
     ]
 
-    print(f"\n测试配置:")
+    print("\n测试配置:")
     print(f"  - 文档数量: {len(documents)}")
     print(f"  - 提取模式: {mode}")
     print(f"  - 服务器: {base_url}")
 
     # 开始测试
-    print(f"\n开始索引...")
+    print("\n开始索引...")
     start_time = time.time()
 
     success_count = 0
@@ -105,7 +105,7 @@ def test_indexing_speed(
         min_time = min(times)
         max_time = max(times)
 
-        print(f"\n性能指标:")
+        print("\n性能指标:")
         print(f"  - 平均时间/文档: {avg_time:.2f} 秒")
         print(f"  - 最快: {min_time:.2f} 秒")
         print(f"  - 最慢: {max_time:.2f} 秒")
@@ -227,9 +227,7 @@ def main():
     saved_time = time_llm - time_trilingual
 
     print(f"  - LLM 提取: {time_llm:.1f} 分钟 ({time_llm/60:.1f} 小时)")
-    print(
-        f"  - 三语言提取: {time_trilingual:.1f} 分钟 ({time_trilingual/60:.1f} 小时)"
-    )
+    print(f"  - 三语言提取: {time_trilingual:.1f} 分钟 ({time_trilingual/60:.1f} 小时)")
     print(f"  - 节省时间: {saved_time:.1f} 分钟 ({saved_time/60:.1f} 小时)")
     print(f"  - 速度提升: {speedup_avg:.1f}x")
 
