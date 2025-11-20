@@ -147,6 +147,27 @@ observability = [
     "langfuse>=3.8.1",
 ]
 
+# Fast entity extraction (NER-based, 8-15x faster than LLM)
+fast = [
+    "hanlp>=2.1.0",    # Chinese NER (F1 95%)
+    "spacy>=3.7.0",    # English & Swedish NER (F1 90% & 85%)
+]
+
+# Server with fast entity extraction (recommended for production)
+server = [
+    "lightrag-hku[api,fast]",
+]
+
+# Development dependencies (linting, formatting, pre-commit hooks)
+dev = [
+    "ruff>=0.8.0",
+    "pre-commit>=4.0.0",
+    "pytest>=8.4.2",
+    "pytest-asyncio>=1.2.0",
+    "black>=24.0.0",
+    "mypy>=1.0.0",
+]
+
 [project.scripts]
 lightrag-server = "lightrag.api.lightrag_server:main"
 lightrag-gunicorn = "lightrag.api.run_with_gunicorn:main"
@@ -181,3 +202,25 @@ python_functions = ["test_*"]
 
 [tool.ruff]
 target-version = "py310"
+
+[tool.uv]
+# UV package manager configuration
+dev-dependencies = [
+    "ruff>=0.8.0",
+    "pre-commit>=4.0.0",
+    "pytest>=8.4.2",
+    "pytest-asyncio>=1.2.0",
+]
+
+# Python version constraint
+python = ">=3.10"
+
+# Prefer binary wheels for faster installation
+prefer-binary = true
+
+# Generate requirements.txt for backward compatibility
+compile-bytecode = false
+
+[tool.uv.sources]
+# Use PyPI as the primary source
+# Can add custom package indices here if needed

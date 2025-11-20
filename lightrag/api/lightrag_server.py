@@ -991,6 +991,31 @@ def create_app(args):
         name=args.simulated_model_name, tag=args.simulated_model_tag
     )
 
+    # Initialize trilingual entity extractor if enabled
+    entity_extractor = None
+    if args.use_trilingual_extractor:
+        try:
+            from lightrag.kg.trilingual_entity_extractor import (
+                TrilingualEntityExtractor,
+            )
+
+            entity_extractor = TrilingualEntityExtractor()
+            logger.info("Trilingual entity extractor initialized successfully")
+            logger.info(f"  - Fallback to LLM: {args.trilingual_fallback_to_llm}")
+            logger.info(f"  - Default language: {args.trilingual_default_language}")
+        except ImportError as e:
+            logger.error(f"Failed to import trilingual entity extractor: {e}")
+            logger.error("Please install dependencies: uv sync --extra fast")
+            logger.error("And download models: ./scripts/install_fast_models.sh")
+            if not args.trilingual_fallback_to_llm:
+                raise
+            logger.warning("Falling back to LLM-based entity extraction")
+        except Exception as e:
+            logger.error(f"Failed to initialize trilingual entity extractor: {e}")
+            if not args.trilingual_fallback_to_llm:
+                raise
+            logger.warning("Falling back to LLM-based entity extraction")
+
     # Initialize RAG with unified configuration
     try:
         rag = LightRAG(
@@ -1021,11 +1046,14 @@ def create_app(args):
             rerank_model_func=rerank_model_func,
             max_parallel_insert=args.max_parallel_insert,
             max_graph_nodes=args.max_graph_nodes,
+            entity_extract_max_gleaning=args.entity_extract_max_gleaning,
             addon_params={
                 "language": args.summary_language,
                 "entity_types": args.entity_types,
             },
             ollama_server_infos=ollama_server_infos,
+            entity_extractor=entity_extractor,
+            use_llm_extraction_fallback=args.trilingual_fallback_to_llm,
         )
     except Exception as e:
         logger.error(f"Failed to initialize LightRAG: {e}")
@@ -1195,6 +1223,7 @@ def create_app(args):
                     "max_async": args.max_async,
                     "embedding_func_max_async": args.embedding_func_max_async,
                     "embedding_batch_num": args.embedding_batch_num,
+                    "entity_extract_max_gleaning": args.entity_extract_max_gleaning,
                 },
                 "auth_mode": auth_mode,
                 "pipeline_busy": pipeline_status.get("busy", False),

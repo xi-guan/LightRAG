@@ -346,6 +346,9 @@ def parse_args() -> argparse.Namespace:
     # Get MAX_GRAPH_NODES from environment
     args.max_graph_nodes = get_env_value("MAX_GRAPH_NODES", 1000, int)
 
+    # Get ENTITY_EXTRACT_MAX_GLEANING from environment
+    args.entity_extract_max_gleaning = get_env_value("MAX_GLEANING", 1, int)
+
     # Handle openai-ollama special case
     if args.llm_binding == "openai-ollama":
         args.llm_binding = "openai"
@@ -395,6 +398,20 @@ def parse_args() -> argparse.Namespace:
     args.summary_language = get_env_value("SUMMARY_LANGUAGE", DEFAULT_SUMMARY_LANGUAGE)
     args.entity_types = get_env_value("ENTITY_TYPES", DEFAULT_ENTITY_TYPES, list)
     args.whitelist_paths = get_env_value("WHITELIST_PATHS", "/health,/api/*")
+
+    # Trilingual entity extractor configuration
+    args.use_trilingual_extractor = get_env_value(
+        "USE_TRILINGUAL_EXTRACTOR", False, bool
+    )
+    args.trilingual_auto_detect_language = get_env_value(
+        "TRILINGUAL_AUTO_DETECT_LANGUAGE", True, bool
+    )
+    args.trilingual_fallback_to_llm = get_env_value(
+        "TRILINGUAL_FALLBACK_TO_LLM", True, bool
+    )
+    args.trilingual_default_language = get_env_value(
+        "TRILINGUAL_DEFAULT_LANGUAGE", "en"
+    )
 
     # For JWT Auth
     args.auth_accounts = get_env_value("AUTH_ACCOUNTS", "")
