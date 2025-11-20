@@ -2,7 +2,7 @@
 """
 LightRAG 索引速度对比测试
 
-对比使用 LLM 提取 vs 使用三语言实体提取器的实际索引速度
+对比使用 LLM 提取 vs 使用快速实体提取器的实际索引速度
 """
 
 import requests
@@ -20,10 +20,10 @@ def test_indexing_speed(
     Args:
         base_url: 服务器地址
         num_documents: 测试文档数量
-        use_trilingual: 是否使用三语言提取器
+        use_trilingual: 是否使用快速提取器
     """
     print("\n" + "=" * 70)
-    mode = "三语言实体提取器" if use_trilingual else "LLM 提取"
+    mode = "快速实体提取器" if use_trilingual else "LLM 提取"
     print(f"  测试: {mode}")
     print("=" * 70)
 
@@ -131,7 +131,7 @@ def main():
     print()
     print("此测试将对比两种提取模式的实际索引速度:")
     print("  1. LLM 提取 (原始方式)")
-    print("  2. 三语言实体提取器 (新方式)")
+    print("  2. 快速实体提取器 (新方式)")
     print()
 
     base_url = "http://localhost:9621"
@@ -149,7 +149,7 @@ def main():
         print(f"❌ 无法连接到服务器: {e}")
         print()
         print("请先启动 LightRAG server:")
-        print("  ./scripts/start_server_with_trilingual.sh")
+        print("  ./scripts/start_server_fast.sh")
         return
 
     # 询问测试数量
@@ -178,9 +178,9 @@ def main():
     print("测试 1 完成！")
     input("\n按 Enter 继续测试 2...")
 
-    # 测试 2: 三语言提取器
+    # 测试 2: 快速提取器
     print("\n" + "🟢" * 35)
-    print("  第二轮: 三语言实体提取器")
+    print("  第二轮: 快速实体提取器")
     print("🟢" * 35)
     input("\n按 Enter 开始测试 2...")
 
@@ -197,7 +197,7 @@ def main():
     print()
 
     print("┌─────────────────────────┬──────────────┬──────────────┬──────────┐")
-    print("│ 指标                    │ LLM 提取     │ 三语言提取器 │ 提升     │")
+    print("│ 指标                    │ LLM 提取     │ 快速提取器 │ 提升     │")
     print("├─────────────────────────┼──────────────┼──────────────┼──────────┤")
 
     # 总耗时
@@ -227,7 +227,7 @@ def main():
     saved_time = time_llm - time_trilingual
 
     print(f"  - LLM 提取: {time_llm:.1f} 分钟 ({time_llm/60:.1f} 小时)")
-    print(f"  - 三语言提取: {time_trilingual:.1f} 分钟 ({time_trilingual/60:.1f} 小时)")
+    print(f"  - 快速提取: {time_trilingual:.1f} 分钟 ({time_trilingual/60:.1f} 小时)")
     print(f"  - 节省时间: {saved_time:.1f} 分钟 ({saved_time/60:.1f} 小时)")
     print(f"  - 速度提升: {speedup_avg:.1f}x")
 
@@ -235,9 +235,9 @@ def main():
     print()
     print("=" * 70)
     if speedup_avg > 1.5:
-        print("  ✅ 结论: 三语言实体提取器显著提升了索引速度！")
+        print("  ✅ 结论: 快速实体提取器显著提升了索引速度！")
     elif speedup_avg > 1.1:
-        print("  ✅ 结论: 三语言实体提取器有一定速度提升。")
+        print("  ✅ 结论: 快速实体提取器有一定速度提升。")
     else:
         print("  ⚠️  结论: 速度提升不明显，可能需要检查配置。")
     print("=" * 70)

@@ -192,7 +192,7 @@ def main():
         print("  - .env 文件已添加到 .gitignore，不会提交到 Git")
         print("  - 修改 config/local.yaml 后重新运行此脚本更新 .env")
         print("  - 环境变量命名规则: 嵌套路径转大写并用下划线连接")
-        print("    例如: trilingual.chinese.enabled -> TRILINGUAL_CHINESE_ENABLED")
+        print("    例如: fast.chinese.enabled -> TRILINGUAL_CHINESE_ENABLED")
         print()
 
     except Exception as e:

@@ -2,7 +2,7 @@
 """
 LightRAG 实时索引测试 - 上传文档并查看提取速度
 
-使用三语言实体提取器实时索引文档，显示提取的实体和耗时
+使用快速实体提取器实时索引文档，显示提取的实体和耗时
 """
 
 import requests
@@ -19,13 +19,13 @@ def upload_document(server_url, text, language="zh", use_trilingual=True):
         server_url: 服务器地址
         text: 文档内容
         language: 语言代码
-        use_trilingual: 是否使用三语言提取器
+        use_trilingual: 是否使用快速提取器
 
     Returns:
         响应结果和耗时
     """
     print("\n" + "=" * 70)
-    print(f"  上传文档 ({'三语言提取器' if use_trilingual else 'LLM 提取'})")
+    print(f"  上传文档 ({'快速提取器' if use_trilingual else 'LLM 提取'})")
     print("=" * 70)
 
     print("\n📄 文档内容:")
@@ -95,7 +95,7 @@ def upload_file(server_url, file_path, language="zh", use_trilingual=True):
         server_url: 服务器地址
         file_path: 文件路径
         language: 语言代码
-        use_trilingual: 是否使用三语言提取器
+        use_trilingual: 是否使用快速提取器
     """
     file_path = Path(file_path)
 
@@ -121,7 +121,7 @@ def batch_upload(server_url, texts, language="zh", use_trilingual=True):
         server_url: 服务器地址
         texts: 文档列表
         language: 语言代码
-        use_trilingual: 是否使用三语言提取器
+        use_trilingual: 是否使用快速提取器
     """
     print("\n" + "=" * 70)
     print(f"  批量上传 {len(texts)} 个文档")
@@ -184,7 +184,7 @@ def main():
         print(f"❌ 无法连接到服务器: {e}")
         print()
         print("请先启动 LightRAG server:")
-        print("  ./scripts/start_server_with_trilingual.sh")
+        print("  ./scripts/start_server_fast.sh")
         return
 
     # 示例文档
@@ -209,7 +209,7 @@ def main():
     # 选择提取器
     print()
     print("选择提取器:")
-    print("  1. 三语言实体提取器 (快)")
+    print("  1. 快速实体提取器 (快)")
     print("  2. LLM 提取 (慢)")
 
     try:

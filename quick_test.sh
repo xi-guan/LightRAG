@@ -14,7 +14,7 @@ if ! curl -s "${SERVER_URL}/health" > /dev/null 2>&1; then
     echo "❌ 服务器未运行"
     echo ""
     echo "请先启动服务器："
-    echo "  ./scripts/start_server_with_trilingual.sh"
+    echo "  ./scripts/start_server_fast.sh"
     echo ""
     exit 1
 fi
@@ -24,7 +24,7 @@ echo ""
 
 # 显示服务器配置
 echo "📋 服务器配置："
-curl -s "${SERVER_URL}/health" | jq -r '.configuration | "  - 三语言提取器: \(.use_trilingual_extractor // "未配置")"'
+curl -s "${SERVER_URL}/health" | jq -r '.configuration | "  - 快速提取器: \(.use_trilingual_extractor // "未配置")"'
 echo ""
 
 # 上传测试文档

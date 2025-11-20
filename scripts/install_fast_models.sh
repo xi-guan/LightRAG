@@ -1,11 +1,11 @@
 #!/bin/bash
-# 三语言实体提取器安装脚本
-# 自动安装 spaCy + HanLP 及相关模型
+# 快速实体提取器安装脚本
+# 自动安装 spaCy + HanLP 及相关模型（8-15倍速度提升）
 
 set -e  # 遇到错误立即退出
 
 echo "=================================================="
-echo "  三语言实体提取器安装"
+echo "  快速实体提取器安装"
 echo "  支持: 中文 (HanLP) + 英文 (spaCy) + 瑞典语 (spaCy)"
 echo "=================================================="
 echo ""
@@ -25,12 +25,12 @@ echo ""
 # 检查是否安装了 uv
 if command -v uv &> /dev/null; then
     echo "   使用 uv 安装 (超快速!)..."
-    uv pip install -e ".[trilingual]"
+    uv pip install -e ".[fast]"
 else
     echo "   使用 pip 安装..."
     echo "   💡 提示: 安装 uv 可获得 10-100 倍速度提升"
     echo "      curl -LsSf https://astral.sh/uv/install.sh | sh"
-    pip install -r requirements-trilingual.txt
+    pip install -e ".[fast]"
 fi
 
 # 下载 spaCy 英文模型
@@ -64,5 +64,5 @@ echo "  - 按需加载: 同时只加载一个语言模型 (~1.5-1.8 GB)"
 echo "  - 不会同时占用 4-5 GB 内存"
 echo ""
 echo "运行测试:"
-echo "  python3 scripts/test_trilingual_extractor.py"
+echo "  python3 scripts/test_fast_extractor.py"
 echo ""

@@ -1,8 +1,8 @@
-# LightRAG 三语言实体提取 - 快速测试
+# LightRAG 快速实体提取 - 测试指南
 
 ## 目标
 
-用三语言方式启动 LightRAG，手动上传 txt 文件，对比速度和质量。
+用快速NER方式启动 LightRAG（8-15倍速度提升），手动上传 txt 文件，对比速度和质量。
 
 ---
 
@@ -11,17 +11,24 @@
 ### 1. 安装依赖
 
 ```bash
-uv sync --extra trilingual --extra api
-./scripts/install_trilingual_models.sh
+# 推荐：一键安装服务器+快速提取
+uv sync --extra server
+
+# 或分开安装
+uv sync --extra fast --extra api
 ```
 
-### 2. 启用三语言配置
+```bash
+./scripts/install_fast_models.sh
+```
+
+### 2. 启用快速提取配置
 
 ```bash
 # 生成配置文件
 ./scripts/setup.sh
 
-# 编辑 config/local.yaml，添加：
+# 编辑 config/local.yaml
 vim config/local.yaml
 ```
 
@@ -56,7 +63,7 @@ uv run lightrag-server
 新开终端：
 
 ```bash
-# 上传你的 txt 文件
+# 上传你的 txt 文件（快速模式）
 curl -X POST http://localhost:9621/documents \
   -H "Content-Type: application/json" \
   -d "{
@@ -89,10 +96,11 @@ curl -X POST http://localhost:9621/documents \
 
 ## 预期结果
 
-| 指标 | 三语言 | LLM |
-|------|--------|-----|
+| 指标 | 快速NER | LLM |
+|------|---------|-----|
 | 速度 | ~1秒 | ~10秒 |
 | 实体数量 | 相近或更多 | 基准 |
+| 质量 | F1 95% | F1 80% |
 
 ---
 
@@ -106,10 +114,12 @@ curl -X POST http://localhost:9621/documents \
 
 **模型未安装:**
 ```bash
-./scripts/install_trilingual_models.sh
+./scripts/install_fast_models.sh
 ```
 
 **依赖缺失:**
 ```bash
-uv sync --extra trilingual
+uv sync --extra server
+# 或
+uv sync --extra fast
 ```

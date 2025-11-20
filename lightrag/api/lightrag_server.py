@@ -1005,8 +1005,8 @@ def create_app(args):
             logger.info(f"  - Default language: {args.trilingual_default_language}")
         except ImportError as e:
             logger.error(f"Failed to import trilingual entity extractor: {e}")
-            logger.error("Please install dependencies: uv sync --extra trilingual")
-            logger.error("And download models: ./scripts/install_trilingual_models.sh")
+            logger.error("Please install dependencies: uv sync --extra fast")
+            logger.error("And download models: ./scripts/install_fast_models.sh")
             if not args.trilingual_fallback_to_llm:
                 raise
             logger.warning("Falling back to LLM-based entity extraction")

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-在 LightRAG 中使用三语言实体提取器
+在 LightRAG 中使用快速实体提取器
 
-演示如何将三语言实体提取器集成到 LightRAG 工作流中，
+演示如何将快速实体提取器集成到 LightRAG 工作流中，
 处理多语言文档并构建知识图谱。
 """
 
@@ -315,7 +315,7 @@ def integration_guide():
 
     方法 3: 混合模式
     ──────────────────────────────
-    # 对于高质量要求的文档，使用三语言提取器
+    # 对于高质量要求的文档，使用快速提取器
     if is_important(doc):
         entities = trilingual_extractor.extract(doc.text, doc.language)
     # 对于一般文档，使用 LLM 提取（更灵活但成本更高）
@@ -328,7 +328,7 @@ def integration_guide():
 def main():
     """主函数"""
     print("=" * 60)
-    print("  LightRAG 三语言实体提取器 - 实际应用示例")
+    print("  LightRAG 快速实体提取器 - 实际应用示例")
     print("=" * 60)
 
     try:
@@ -355,8 +355,8 @@ def main():
         print("=" * 60)
         print()
         print("下一步:")
-        print("  1. 运行基础示例: python examples/trilingual_extractor_demo.py")
-        print("  2. 运行完整测试: python scripts/test_trilingual_extractor.py")
+        print("  1. 运行基础示例: python examples/fast_extractor_demo.py")
+        print("  2. 运行完整测试: python scripts/test_fast_extractor.py")
         print("  3. 查看文档: docs/TrilingualNER-Usage-zh.md")
         print("  4. 集成到你的项目中")
         print()
@@ -364,8 +364,8 @@ def main():
     except Exception as e:
         print(f"\n❌ 错误: {e}")
         print("\n请确保:")
-        print("  1. 已安装依赖: uv sync --extra trilingual")
-        print("  2. 已下载模型: ./scripts/install_trilingual_models.sh")
+        print("  1. 已安装依赖: uv sync --extra fast")
+        print("  2. 已下载模型: ./scripts/install_fast_models.sh")
         import traceback
 
         traceback.print_exc()

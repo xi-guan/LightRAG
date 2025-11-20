@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-三语言实体提取器使用示例
+快速实体提取器使用示例
 
-演示如何在实际场景中使用三语言实体提取器提取中文、英文、瑞典语文本中的实体。
+演示如何在实际场景中使用快速实体提取器提取中文、英文、瑞典语文本中的实体。
 """
 
 from lightrag.kg.trilingual_entity_extractor import TrilingualEntityExtractor
@@ -166,7 +166,7 @@ def performance_comparison():
 def main():
     """主函数"""
     print("=" * 60)
-    print("  LightRAG 三语言实体提取器使用示例")
+    print("  LightRAG 快速实体提取器使用示例")
     print("=" * 60)
 
     print("\n提示: 首次运行会下载模型，请耐心等待...")
@@ -196,15 +196,15 @@ def main():
         print()
         print("下一步:")
         print("  - 查看文档: docs/TrilingualNER-Usage-zh.md")
-        print("  - 运行测试: python scripts/test_trilingual_extractor.py")
+        print("  - 运行测试: python scripts/test_fast_extractor.py")
         print("  - 集成到 LightRAG: 参考文档中的集成指南")
         print()
 
     except Exception as e:
         print(f"\n❌ 错误: {e}")
         print("\n可能的原因:")
-        print("  1. 模型未安装: 运行 ./scripts/install_trilingual_models.sh")
-        print("  2. 依赖未安装: 运行 uv sync --extra trilingual")
+        print("  1. 模型未安装: 运行 ./scripts/install_fast_models.sh")
+        print("  2. 依赖未安装: 运行 uv sync --extra fast")
         print("  3. 网络问题: HanLP 首次使用需要下载模型")
         import traceback
 

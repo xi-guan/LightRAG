@@ -147,10 +147,15 @@ observability = [
     "langfuse>=3.8.1",
 ]
 
-# Multilingual entity extraction (Chinese/English/Swedish)
-trilingual = [
+# Fast entity extraction (NER-based, 8-15x faster than LLM)
+fast = [
     "hanlp>=2.1.0",    # Chinese NER (F1 95%)
     "spacy>=3.7.0",    # English & Swedish NER (F1 90% & 85%)
+]
+
+# Server with fast entity extraction (recommended for production)
+server = [
+    "lightrag-hku[api,fast]",
 ]
 
 # Development dependencies (linting, formatting, pre-commit hooks)

@@ -2,15 +2,15 @@
 
 本目录包含 LightRAG 的使用示例，帮助你快速上手。
 
-## 三语言实体提取器示例
+## 快速实体提取器示例
 
-### 1. 基础示例 (`trilingual_extractor_demo.py`)
+### 1. 基础示例 (`fast_extractor_demo.py`)
 
-**目的**: 演示三语言实体提取器的基本用法
+**目的**: 演示快速实体提取器的基本用法
 
 **运行**:
 ```bash
-uv run python examples/trilingual_extractor_demo.py
+uv run python examples/fast_extractor_demo.py
 ```
 
 **包含内容**:
@@ -21,17 +21,17 @@ uv run python examples/trilingual_extractor_demo.py
 - 支持的实体类型说明
 - 性能对比数据
 
-**适合**: 第一次使用三语言提取器的用户
+**适合**: 第一次使用快速提取器的用户
 
 ---
 
-### 2. LightRAG 集成示例 (`lightrag_with_trilingual.py`)
+### 2. LightRAG 集成示例 (`lightrag_with_fast.py`)
 
-**目的**: 展示如何将三语言提取器集成到 LightRAG 工作流
+**目的**: 展示如何将快速提取器集成到 LightRAG 工作流
 
 **运行**:
 ```bash
-uv run python examples/lightrag_with_trilingual.py
+uv run python examples/lightrag_with_fast.py
 ```
 
 **包含内容**:
@@ -42,7 +42,7 @@ uv run python examples/lightrag_with_trilingual.py
 - 性能优化提示
 - 集成指南
 
-**适合**: 需要在 LightRAG 项目中使用三语言提取器的开发者
+**适合**: 需要在 LightRAG 项目中使用快速提取器的开发者
 
 ---
 
@@ -52,7 +52,7 @@ uv run python examples/lightrag_with_trilingual.py
 
 ```bash
 # 方法 1: 使用 UV (推荐，超快！)
-uv sync --extra trilingual
+uv sync --extra fast
 
 # 方法 2: 使用 pip
 pip install -r requirements-trilingual.txt
@@ -61,7 +61,7 @@ pip install -r requirements-trilingual.txt
 ### 下载模型
 
 ```bash
-./scripts/install_trilingual_models.sh
+./scripts/install_fast_models.sh
 ```
 
 这会下载:
@@ -85,16 +85,16 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 cd /path/to/LightRAG
 
 # 3. 安装依赖
-uv sync --extra trilingual
+uv sync --extra fast
 
 # 4. 下载模型
-./scripts/install_trilingual_models.sh
+./scripts/install_fast_models.sh
 
 # 5. 运行基础示例
-uv run python examples/trilingual_extractor_demo.py
+uv run python examples/fast_extractor_demo.py
 
 # 6. 运行集成示例
-uv run python examples/lightrag_with_trilingual.py
+uv run python examples/lightrag_with_fast.py
 ```
 
 ---
@@ -103,9 +103,9 @@ uv run python examples/lightrag_with_trilingual.py
 
 | 示例 | 复杂度 | 运行时间 | 适合场景 |
 |------|--------|----------|----------|
-| `trilingual_extractor_demo.py` | 简单 | ~30 秒 | 学习基础用法 |
-| `lightrag_with_trilingual.py` | 中等 | ~60 秒 | 实际项目集成 |
-| `scripts/test_trilingual_extractor.py` | 高级 | ~90 秒 | 完整测试 |
+| `fast_extractor_demo.py` | 简单 | ~30 秒 | 学习基础用法 |
+| `lightrag_with_fast.py` | 中等 | ~60 秒 | 实际项目集成 |
+| `scripts/test_fast_extractor.py` | 高级 | ~90 秒 | 完整测试 |
 
 ---
 

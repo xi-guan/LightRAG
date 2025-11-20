@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-LightRAG Server 三语言实体提取器测试脚本
+LightRAG Server 快速实体提取器测试脚本
 
-测试 LightRAG API 服务器与三语言实体提取器的集成。
+测试 LightRAG API 服务器与快速实体提取器的集成。
 """
 
 import requests
@@ -313,7 +313,7 @@ class ServerTester:
 def main():
     """主函数"""
     print("=" * 60)
-    print("  LightRAG Server 三语言实体提取器测试")
+    print("  LightRAG Server 快速实体提取器测试")
     print("=" * 60)
 
     # 解析命令行参数
@@ -324,7 +324,7 @@ def main():
     print("  - 确保 LightRAG server 已启动")
     print("  - 启动命令: uv run lightrag-server")
     print(
-        "  - 或使用自定义地址: python test_server_trilingual.py http://your-server:port"
+        "  - 或使用自定义地址: python test_server_fast.py http://your-server:port"
     )
 
     # 创建测试器

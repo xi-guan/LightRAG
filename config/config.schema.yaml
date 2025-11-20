@@ -1,4 +1,4 @@
-# LightRAG 三语言实体提取器配置 Schema
+# LightRAG 快速实体提取器（8-15倍速度提升）配置 Schema
 #
 # 此文件定义配置字段的元数据，包括：
 # - 字段路径（section）
@@ -10,13 +10,13 @@
 # 运行 ./scripts/setup.sh 自动生成 config/local.yaml 和 .env
 
 # ============================================================
-# 三语言实体提取器配置
+# 快速实体提取器配置
 # ============================================================
 
 # 通用配置
 - section: trilingual.enabled
   default: true
-  description: "Enable trilingual entity extractor (Chinese/English/Swedish)"
+  description: "Enable fast entity extractor (8-15x faster than LLM) (Chinese/English/Swedish)"
 
 - section: trilingual.default_language
   default: "en"

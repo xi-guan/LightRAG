@@ -1,5 +1,5 @@
 #!/bin/bash
-# LightRAG Server 一键启动脚本（含三语言支持）
+# LightRAG Server 一键启动脚本（快速实体提取）
 
 set -e
 
@@ -10,7 +10,7 @@ PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 cd "$PROJECT_ROOT"
 
 echo "======================================================================"
-echo "  LightRAG Server 启动 (三语言实体提取器)"
+echo "  LightRAG Server 启动 (快速实体提取)"
 echo "======================================================================"
 echo ""
 
@@ -29,7 +29,7 @@ echo ""
 echo "🔍 检查依赖..."
 if [ ! -d ".venv" ]; then
     echo "   正在安装依赖..."
-    uv sync --extra api --extra trilingual
+    uv sync --extra server
 else
     echo "   ✓ 虚拟环境已存在"
 fi
@@ -55,7 +55,7 @@ fi
 if [ "$MODEL_CHECK_PASSED" = false ]; then
     echo ""
     echo "   正在下载语言模型..."
-    ./scripts/install_trilingual_models.sh
+    ./scripts/install_fast_models.sh
 else
     echo "   ✓ 所有语言模型已安装"
 fi
@@ -80,7 +80,7 @@ echo "服务器地址: http://localhost:9621"
 echo "健康检查: http://localhost:9621/health"
 echo ""
 echo "测试命令:"
-echo "  - 自动测试: uv run python examples/test_server_trilingual.py"
+echo "  - 自动测试: uv run python examples/test_server_fast.py"
 echo "  - 手动测试: curl http://localhost:9621/health"
 echo ""
 echo "停止服务器: Ctrl+C"
