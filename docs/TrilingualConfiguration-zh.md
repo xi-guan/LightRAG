@@ -6,9 +6,51 @@ LightRAG 现在支持使用专门的 NER（命名实体识别）模型来替代 
 
 ## 配置方式
 
-### 方式 1：环境变量（推荐）
+### 推荐工作流程
 
-在 `.env` 文件中添加以下配置：
+**1 → 2 → 3 工作流程：**
+
+```bash
+# 1. 生成初始配置
+./scripts/setup.sh
+
+# 2. 编辑 config/local.yaml（你的配置文件）
+vim config/local.yaml
+
+# 3. 重新运行 setup.sh 从 local.yaml 生成 .env
+./scripts/setup.sh
+```
+
+### 方式 1：config/local.yaml（推荐）
+
+**步骤 1：** 生成配置文件
+```bash
+./scripts/setup.sh
+```
+
+**步骤 2：** 编辑 `config/local.yaml`：
+
+```yaml
+lightrag:
+  entity_extraction:
+    use_trilingual: true
+    default_language: zh
+    fallback_to_llm: true
+    auto_detect_language: true
+```
+
+**步骤 3：** 更新 `.env`
+```bash
+./scripts/setup.sh  # 从 local.yaml 重新生成 .env
+```
+
+**重要提示：**
+- ✅ **编辑 `config/local.yaml`** - 你的配置文件
+- ❌ **不要编辑 `.env`** - 自动生成的文件
+
+### 方式 2：直接环境变量（不推荐）
+
+如果你坚持直接使用环境变量，可以手动编辑 `.env`：
 
 ```bash
 # 启用三语言实体提取器
@@ -24,16 +66,7 @@ TRILINGUAL_FALLBACK_TO_LLM=true
 TRILINGUAL_AUTO_DETECT_LANGUAGE=true
 ```
 
-### 方式 2：config/local.yaml
-
-```yaml
-lightrag:
-  entity_extraction:
-    use_trilingual: true
-    default_language: zh
-    fallback_to_llm: true
-    auto_detect_language: true
-```
+**注意：** 下次运行 `./scripts/setup.sh` 会覆盖你的手动修改！
 
 ### 方式 3：API 请求参数（每次请求控制）
 
