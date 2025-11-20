@@ -38,39 +38,90 @@ uv run python examples/benchmark_indexing_speed.py
 
 ## 配置
 
-### 配置文件
-
-```
-config/config.schema.yaml  → 配置元数据(Git追踪)
-         ↓
-config/local.yaml          → 本地配置(自动生成)
-         ↓
-.env                       → 环境变量(自动生成)
-```
-
-### 修改配置
+### 配置工作流 (3步启用三语言)
 
 ```bash
-# 1. 编辑配置
-nano config/local.yaml
+# 1. 生成配置
+./scripts/setup.sh
 
-# 2. 重新生成 .env
+# 2. 编辑 config/local.yaml
+vim config/local.yaml
+
+# 3. 重新生成 .env
 ./scripts/setup.sh
 ```
 
-### 三语言配置
+### 配置文件层次
+
+```
+config.schema.yaml  → 配置模板(Git追踪, ❌不要编辑)
+      ↓
+local.yaml          → 你的配置(✅编辑这个)
+      ↓
+.env                → 环境变量(❌不要编辑, 自动生成)
+```
+
+### 最小配置
 
 ```yaml
 # config/local.yaml
-trilingual:
-  enabled: true
-  default_language: zh
-  lazy_loading: true
-
 lightrag:
   entity_extraction:
     use_trilingual: true
+```
+
+### 完整配置
+
+```yaml
+# config/local.yaml
+lightrag:
+  entity_extraction:
+    use_trilingual: true
+    default_language: "zh"
     fallback_to_llm: true
+    auto_detect_language: true
+    max_gleaning: 0  # 禁用gleaning提速
+
+trilingual:
+  enabled: true
+  default_language: "zh"
+  lazy_loading: true
+  chinese:
+    enabled: true
+  english:
+    enabled: true
+    batch_size: 32
+  swedish:
+    enabled: true
+    batch_size: 32
+```
+
+### 配置场景
+
+**纯中文文档:**
+```yaml
+lightrag:
+  entity_extraction:
+    use_trilingual: true
+    default_language: "zh"
+    max_gleaning: 0
+```
+
+**混合语言:**
+```yaml
+lightrag:
+  entity_extraction:
+    use_trilingual: true
+    auto_detect_language: true
+    fallback_to_llm: true
+```
+
+**追求最高质量(慢):**
+```yaml
+lightrag:
+  entity_extraction:
+    use_trilingual: false
+    max_gleaning: 1
 ```
 
 ---
@@ -169,39 +220,78 @@ uv sync --upgrade
 
 ## 故障排查
 
-### 模型未找到
+### 配置相关
 
+**问题: 修改local.yaml后没生效**
+```bash
+# 忘记重新生成.env
+./scripts/setup.sh
+# 然后重启服务器
+```
+
+**问题: 找不到local.yaml**
+```bash
+# 首次运行会生成
+./scripts/setup.sh
+```
+
+**问题: .env被手动修改后又被覆盖**
+```bash
+# 不要编辑.env, 编辑local.yaml
+vim config/local.yaml
+./scripts/setup.sh
+```
+
+**问题: 验证配置**
+```bash
+cat .env | grep TRILINGUAL
+# 应看到: LIGHTRAG_ENTITY_EXTRACTION_USE_TRILINGUAL=true
+```
+
+### 依赖相关
+
+**问题: 模型未找到**
 ```bash
 ./scripts/install_trilingual_models.sh
 ```
 
-### 依赖未安装
-
+**问题: 依赖未安装**
 ```bash
 uv sync --extra trilingual
+
+# 或一键安装
+./scripts/start_server_with_trilingual.sh
 ```
 
-### 速度提升不明显
+**问题: 导入失败**
+```
+Failed to import trilingual entity extractor
+```
+解决: 确保安装了三语言依赖
+```bash
+uv sync --extra trilingual
+./scripts/install_trilingual_models.sh
+```
 
+### 性能相关
+
+**问题: 速度提升不明显**
 ```bash
 # 检查配置
-curl http://localhost:9621/config
-
-# 确认 trilingual_enabled: true
+cat .env | grep LIGHTRAG_ENTITY_EXTRACTION_USE_TRILINGUAL
+# 应返回: LIGHTRAG_ENTITY_EXTRACTION_USE_TRILINGUAL=true
 ```
 
-### 内存不足
-
-使用更小的模型:
+**问题: 内存不足**
 ```bash
+# 使用更小的模型
 python -m spacy download en_core_web_sm
 python -m spacy download sv_core_news_sm
 ```
 
-### 首次请求慢
-
-模型懒加载,首次需要2-3秒。预热:
+**问题: 首次请求慢**
 ```bash
+# 模型懒加载,首次2-3秒。预热:
 curl -X POST http://localhost:9621/extract \
   -d '{"text":"test","language":"zh"}'
 ```
