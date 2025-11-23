@@ -148,9 +148,13 @@ observability = [
 ]
 
 # Fast entity extraction (NER-based, 8-15x faster than LLM)
+# Includes API server and LLM support for flexible entity extraction:
+# - Use LLM extraction (default, good quality)
+# - Use HanLP/spaCy extraction (8-15x faster, enable via config)
 fast = [
-    "hanlp>=2.1.0",    # Chinese NER (F1 95%)
-    "spacy>=3.7.0",    # English & Swedish NER (F1 90% & 85%)
+    "lightrag-hku[api,offline-llm]",  # API server + LLM support
+    "hanlp>=2.1.0",                    # Chinese NER (F1 95%)
+    "spacy>=3.7.0",                    # English & Swedish NER (F1 90% & 85%)
 ]
 
 # Server with fast entity extraction (recommended for production)
@@ -179,6 +183,14 @@ Documentation = "https://github.com/HKUDS/LightRAG"
 Repository = "https://github.com/HKUDS/LightRAG"
 "Bug Tracker" = "https://github.com/HKUDS/LightRAG/issues"
 
+[dependency-groups]
+dev = [
+    "ruff>=0.8.0",
+    "pre-commit>=4.0.0",
+    "pytest>=8.4.2",
+    "pytest-asyncio>=1.2.0",
+]
+
 [tool.setuptools.packages.find]
 include = ["lightrag*"]
 exclude = ["data*", "tests*", "scripts*", "examples*", "dickens*", "reproduce*", "output_complete*", "rag_storage*", "inputs*"]
@@ -202,25 +214,3 @@ python_functions = ["test_*"]
 
 [tool.ruff]
 target-version = "py310"
-
-[tool.uv]
-# UV package manager configuration
-dev-dependencies = [
-    "ruff>=0.8.0",
-    "pre-commit>=4.0.0",
-    "pytest>=8.4.2",
-    "pytest-asyncio>=1.2.0",
-]
-
-# Python version constraint
-python = ">=3.10"
-
-# Prefer binary wheels for faster installation
-prefer-binary = true
-
-# Generate requirements.txt for backward compatibility
-compile-bytecode = false
-
-[tool.uv.sources]
-# Use PyPI as the primary source
-# Can add custom package indices here if needed

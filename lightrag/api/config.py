@@ -48,6 +48,78 @@ from lightrag.constants import (
 # the OS environment variables take precedence over the .env file
 load_dotenv(dotenv_path=".env", override=False)
 
+logger = logging.getLogger(__name__)
+
+
+def get_env_value_with_fallback(
+    new_key: str,
+    old_key: str,
+    default: any,
+    value_type: type = str,
+    special_none: bool = False,
+) -> any:
+    """
+    Get value with fallback priority: LIGHTRAG_* prefix > old key > default
+
+    Provides backward compatibility for environment variables while migrating
+    to the new LIGHTRAG_* prefix naming convention.
+
+    Args:
+        new_key: New environment variable key (with LIGHTRAG_ prefix)
+        old_key: Old environment variable key (without prefix)
+        default: Default value if neither env variable is set
+        value_type: Type to convert the value to
+        special_none: If True, return None when value is "None" string
+
+    Returns:
+        Value from environment or default
+
+    Examples:
+        # Try LIGHTRAG_LLM_MODEL first, fall back to LLM_MODEL
+        model = get_env_value_with_fallback(
+            "LIGHTRAG_LLM_MODEL", "LLM_MODEL", "mistral-nemo:latest"
+        )
+    """
+    # Try new key first (LIGHTRAG_* prefix) - preferred
+    value = os.getenv(new_key)
+    if value is not None:
+        logger.debug(f"Using {new_key}={value}")
+    else:
+        # Fallback to old key (backward compatibility)
+        value = os.getenv(old_key)
+        if value is not None:
+            logger.debug(
+                f"Using {old_key}={value} (fallback from {new_key}, "
+                f"consider migrating to LIGHTRAG_* prefix)"
+            )
+
+    if value is None:
+        return default
+
+    # Handle special case for "None" string
+    if special_none and value == "None":
+        return None
+
+    if value_type is bool:
+        return value.lower() in ("true", "1", "yes", "t", "on")
+
+    if value_type is list:
+        try:
+            import json
+
+            return json.loads(value)
+        except (json.JSONDecodeError, TypeError):
+            return value.split(",") if value else []
+
+    try:
+        return value_type(value)
+    except (ValueError, TypeError):
+        logger.warning(
+            f"Failed to convert {new_key}/{old_key}={value} to {value_type}, "
+            f"using default={default}"
+        )
+        return default
+
 
 ollama_server_infos = OllamaServerInfos()
 
@@ -223,7 +295,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--llm-binding",
         type=str,
-        default=get_env_value("LLM_BINDING", "ollama"),
+        default=get_env_value_with_fallback(
+            "LIGHTRAG_LLM_PROVIDER", "LLM_BINDING", "ollama"
+        ),
         choices=[
             "lollms",
             "ollama",
@@ -238,7 +312,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--embedding-binding",
         type=str,
-        default=get_env_value("EMBEDDING_BINDING", "ollama"),
+        default=get_env_value_with_fallback(
+            "LIGHTRAG_EMBEDDING_PROVIDER", "EMBEDDING_BINDING", "ollama"
+        ),
         choices=[
             "lollms",
             "ollama",
@@ -253,7 +329,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--rerank-binding",
         type=str,
-        default=get_env_value("RERANK_BINDING", DEFAULT_RERANK_BINDING),
+        default=get_env_value_with_fallback(
+            "LIGHTRAG_RERANK_PROVIDER", "RERANK_BINDING", DEFAULT_RERANK_BINDING
+        ),
         choices=["null", "cohere", "jina", "aliyun"],
         help=f"Rerank binding type (default: from env or {DEFAULT_RERANK_BINDING})",
     )
@@ -327,60 +405,183 @@ def parse_args() -> argparse.Namespace:
     args.input_dir = os.path.abspath(args.input_dir)
 
     # Inject storage configuration from environment variables
-    args.kv_storage = get_env_value(
-        "LIGHTRAG_KV_STORAGE", DefaultRAGStorageConfig.KV_STORAGE
+    args.kv_storage = get_env_value_with_fallback(
+        "LIGHTRAG_STORAGE_KV_STORAGE",
+        "LIGHTRAG_KV_STORAGE",
+        DefaultRAGStorageConfig.KV_STORAGE,
     )
-    args.doc_status_storage = get_env_value(
-        "LIGHTRAG_DOC_STATUS_STORAGE", DefaultRAGStorageConfig.DOC_STATUS_STORAGE
+    args.doc_status_storage = get_env_value_with_fallback(
+        "LIGHTRAG_STORAGE_DOC_STATUS_STORAGE",
+        "LIGHTRAG_DOC_STATUS_STORAGE",
+        DefaultRAGStorageConfig.DOC_STATUS_STORAGE,
     )
-    args.graph_storage = get_env_value(
-        "LIGHTRAG_GRAPH_STORAGE", DefaultRAGStorageConfig.GRAPH_STORAGE
+    args.graph_storage = get_env_value_with_fallback(
+        "LIGHTRAG_STORAGE_GRAPH_STORAGE",
+        "LIGHTRAG_GRAPH_STORAGE",
+        DefaultRAGStorageConfig.GRAPH_STORAGE,
     )
-    args.vector_storage = get_env_value(
-        "LIGHTRAG_VECTOR_STORAGE", DefaultRAGStorageConfig.VECTOR_STORAGE
+    args.vector_storage = get_env_value_with_fallback(
+        "LIGHTRAG_STORAGE_VECTOR_STORAGE",
+        "LIGHTRAG_VECTOR_STORAGE",
+        DefaultRAGStorageConfig.VECTOR_STORAGE,
     )
 
     # Get MAX_PARALLEL_INSERT from environment
-    args.max_parallel_insert = get_env_value("MAX_PARALLEL_INSERT", 2, int)
+    args.max_parallel_insert = get_env_value_with_fallback(
+        "LIGHTRAG_PERFORMANCE_MAX_PARALLEL_INSERT", "MAX_PARALLEL_INSERT", 2, int
+    )
 
     # Get MAX_GRAPH_NODES from environment
-    args.max_graph_nodes = get_env_value("MAX_GRAPH_NODES", 1000, int)
+    args.max_graph_nodes = get_env_value_with_fallback(
+        "LIGHTRAG_PERFORMANCE_MAX_GRAPH_NODES", "MAX_GRAPH_NODES", 1000, int
+    )
 
     # Get ENTITY_EXTRACT_MAX_GLEANING from environment
-    args.entity_extract_max_gleaning = get_env_value("MAX_GLEANING", 1, int)
+    args.entity_extract_max_gleaning = get_env_value_with_fallback(
+        "LIGHTRAG_ENTITY_EXTRACTION_MAX_GLEANING", "MAX_GLEANING", 1, int
+    )
 
     # Handle openai-ollama special case
     if args.llm_binding == "openai-ollama":
         args.llm_binding = "openai"
         args.embedding_binding = "ollama"
 
-    # Ollama ctx_num
-    args.ollama_num_ctx = get_env_value("OLLAMA_NUM_CTX", 32768, int)
+    # Load provider-specific LLM configuration based on selected provider
+    llm_provider = args.llm_binding
+    if llm_provider == "ollama":
+        args.llm_model = get_env_value_with_fallback(
+            "LIGHTRAG_LLM_OLLAMA_MODEL", "LLM_MODEL", "mistral-nemo:latest"
+        )
+        args.llm_binding_host = get_env_value_with_fallback(
+            "LIGHTRAG_LLM_OLLAMA_HOST", "LLM_BINDING_HOST", "http://localhost:11434"
+        )
+        args.ollama_num_ctx = get_env_value_with_fallback(
+            "LIGHTRAG_LLM_OLLAMA_NUM_CTX", "OLLAMA_NUM_CTX", 32768, int
+        )
+        args.llm_binding_api_key = None  # Ollama doesn't need API key
+    elif llm_provider == "openai":
+        args.llm_model = get_env_value_with_fallback(
+            "LIGHTRAG_LLM_OPENAI_MODEL", "LLM_MODEL", "gpt-4o-mini"
+        )
+        args.llm_binding_api_key = get_env_value_with_fallback(
+            "LIGHTRAG_LLM_OPENAI_API_KEY", "LLM_BINDING_API_KEY", None, special_none=True
+        )
+        args.llm_binding_host = get_env_value_with_fallback(
+            "LIGHTRAG_LLM_OPENAI_BASE_URL", "LLM_BINDING_HOST", "https://api.openai.com/v1"
+        )
+    elif llm_provider == "azure_openai":
+        args.llm_model = get_env_value_with_fallback(
+            "LIGHTRAG_LLM_AZURE_OPENAI_MODEL", "LLM_MODEL", "gpt-4"
+        )
+        args.llm_binding_api_key = get_env_value_with_fallback(
+            "LIGHTRAG_LLM_AZURE_OPENAI_API_KEY", "LLM_BINDING_API_KEY", None, special_none=True
+        )
+        args.llm_binding_host = get_env_value_with_fallback(
+            "LIGHTRAG_LLM_AZURE_OPENAI_ENDPOINT", "LLM_BINDING_HOST", ""
+        )
+        args.azure_deployment = get_env_value("LIGHTRAG_LLM_AZURE_OPENAI_DEPLOYMENT", "")
+    elif llm_provider == "anthropic":
+        args.llm_model = get_env_value_with_fallback(
+            "LIGHTRAG_LLM_ANTHROPIC_MODEL", "LLM_MODEL", "claude-3-sonnet-20240229"
+        )
+        args.llm_binding_api_key = get_env_value_with_fallback(
+            "LIGHTRAG_LLM_ANTHROPIC_API_KEY", "LLM_BINDING_API_KEY", None, special_none=True
+        )
+        args.llm_binding_host = "https://api.anthropic.com"
+    elif llm_provider == "gemini":
+        args.llm_model = get_env_value_with_fallback(
+            "LIGHTRAG_LLM_GEMINI_MODEL", "LLM_MODEL", "gemini-pro"
+        )
+        args.llm_binding_api_key = get_env_value_with_fallback(
+            "LIGHTRAG_LLM_GEMINI_API_KEY", "LLM_BINDING_API_KEY", None, special_none=True
+        )
+        args.llm_binding_host = "https://generativelanguage.googleapis.com"
+    else:
+        # Fallback for unknown providers
+        args.llm_model = get_env_value_with_fallback(
+            "LIGHTRAG_LLM_MODEL", "LLM_MODEL", "mistral-nemo:latest"
+        )
+        args.llm_binding_host = get_env_value_with_fallback(
+            "LIGHTRAG_LLM_BASE_URL", "LLM_BINDING_HOST", get_default_host(llm_provider)
+        )
+        args.llm_binding_api_key = get_env_value_with_fallback(
+            "LIGHTRAG_LLM_API_KEY", "LLM_BINDING_API_KEY", None, special_none=True
+        )
 
-    args.llm_binding_host = get_env_value(
-        "LLM_BINDING_HOST", get_default_host(args.llm_binding)
-    )
-    args.embedding_binding_host = get_env_value(
-        "EMBEDDING_BINDING_HOST", get_default_host(args.embedding_binding)
-    )
-    args.llm_binding_api_key = get_env_value("LLM_BINDING_API_KEY", None)
-    args.embedding_binding_api_key = get_env_value("EMBEDDING_BINDING_API_KEY", "")
+    # Load provider-specific Embedding configuration
+    embedding_provider = args.embedding_binding
+    if embedding_provider == "ollama":
+        args.embedding_model = get_env_value_with_fallback(
+            "LIGHTRAG_EMBEDDING_OLLAMA_MODEL", "EMBEDDING_MODEL", "bge-m3:latest"
+        )
+        args.embedding_binding_host = get_env_value_with_fallback(
+            "LIGHTRAG_EMBEDDING_OLLAMA_HOST", "EMBEDDING_BINDING_HOST", "http://localhost:11434"
+        )
+        args.embedding_dim = get_env_value_with_fallback(
+            "LIGHTRAG_EMBEDDING_OLLAMA_DIMENSION", "EMBEDDING_DIM", 1024, int
+        )
+        args.embedding_binding_api_key = ""  # Ollama doesn't need API key
+    elif embedding_provider == "openai":
+        args.embedding_model = get_env_value_with_fallback(
+            "LIGHTRAG_EMBEDDING_OPENAI_MODEL", "EMBEDDING_MODEL", "text-embedding-3-small"
+        )
+        args.embedding_binding_api_key = get_env_value_with_fallback(
+            "LIGHTRAG_EMBEDDING_OPENAI_API_KEY", "EMBEDDING_BINDING_API_KEY", ""
+        )
+        args.embedding_binding_host = get_env_value_with_fallback(
+            "LIGHTRAG_EMBEDDING_OPENAI_BASE_URL", "EMBEDDING_BINDING_HOST", "https://api.openai.com/v1"
+        )
+        args.embedding_dim = get_env_value_with_fallback(
+            "LIGHTRAG_EMBEDDING_OPENAI_DIMENSION", "EMBEDDING_DIM", 1536, int
+        )
+    elif embedding_provider == "jina":
+        args.embedding_model = get_env_value_with_fallback(
+            "LIGHTRAG_EMBEDDING_JINA_MODEL", "EMBEDDING_MODEL", "jina-embeddings-v2-base-en"
+        )
+        args.embedding_binding_api_key = get_env_value_with_fallback(
+            "LIGHTRAG_EMBEDDING_JINA_API_KEY", "EMBEDDING_BINDING_API_KEY", ""
+        )
+        args.embedding_binding_host = "https://api.jina.ai"
+        args.embedding_dim = get_env_value_with_fallback(
+            "LIGHTRAG_EMBEDDING_JINA_DIMENSION", "EMBEDDING_DIM", 768, int
+        )
+    else:
+        # Fallback for unknown providers
+        args.embedding_model = get_env_value_with_fallback(
+            "LIGHTRAG_EMBEDDING_MODEL", "EMBEDDING_MODEL", "bge-m3:latest"
+        )
+        args.embedding_binding_host = get_env_value_with_fallback(
+            "LIGHTRAG_EMBEDDING_BASE_URL", "EMBEDDING_BINDING_HOST", get_default_host(embedding_provider)
+        )
+        args.embedding_binding_api_key = get_env_value_with_fallback(
+            "LIGHTRAG_EMBEDDING_API_KEY", "EMBEDDING_BINDING_API_KEY", ""
+        )
+        args.embedding_dim = get_env_value_with_fallback(
+            "LIGHTRAG_EMBEDDING_DIMENSION", "EMBEDDING_DIM", 1024, int
+        )
 
-    # Inject model configuration
-    args.llm_model = get_env_value("LLM_MODEL", "mistral-nemo:latest")
-    args.embedding_model = get_env_value("EMBEDDING_MODEL", "bge-m3:latest")
-    args.embedding_dim = get_env_value("EMBEDDING_DIM", 1024, int)
-    args.embedding_send_dim = get_env_value("EMBEDDING_SEND_DIM", False, bool)
+    args.embedding_send_dim = get_env_value_with_fallback(
+        "LIGHTRAG_EMBEDDING_SEND_DIM", "EMBEDDING_SEND_DIM", False, bool
+    )
 
     # Inject chunk configuration
-    args.chunk_size = get_env_value("CHUNK_SIZE", 1200, int)
-    args.chunk_overlap_size = get_env_value("CHUNK_OVERLAP_SIZE", 100, int)
+    args.chunk_size = get_env_value_with_fallback(
+        "LIGHTRAG_CHUNKING_CHUNK_SIZE", "CHUNK_SIZE", 1200, int
+    )
+    args.chunk_overlap_size = get_env_value_with_fallback(
+        "LIGHTRAG_CHUNKING_CHUNK_OVERLAP_SIZE", "CHUNK_OVERLAP_SIZE", 100, int
+    )
 
     # Inject LLM cache configuration
-    args.enable_llm_cache_for_extract = get_env_value(
-        "ENABLE_LLM_CACHE_FOR_EXTRACT", True, bool
+    args.enable_llm_cache_for_extract = get_env_value_with_fallback(
+        "LIGHTRAG_CACHE_ENABLE_LLM_CACHE_FOR_EXTRACT",
+        "ENABLE_LLM_CACHE_FOR_EXTRACT",
+        True,
+        bool,
     )
-    args.enable_llm_cache = get_env_value("ENABLE_LLM_CACHE", True, bool)
+    args.enable_llm_cache = get_env_value_with_fallback(
+        "LIGHTRAG_CACHE_ENABLE_LLM_CACHE", "ENABLE_LLM_CACHE", True, bool
+    )
 
     # Set document_loading_engine from --docling flag
     if args.docling:
@@ -395,22 +596,46 @@ def parse_args() -> argparse.Namespace:
 
     # Add environment variables that were previously read directly
     args.cors_origins = get_env_value("CORS_ORIGINS", "*")
-    args.summary_language = get_env_value("SUMMARY_LANGUAGE", DEFAULT_SUMMARY_LANGUAGE)
+    args.summary_language = get_env_value_with_fallback(
+        "LIGHTRAG_SUMMARY_LANGUAGE",
+        "SUMMARY_LANGUAGE",
+        DEFAULT_SUMMARY_LANGUAGE,
+    )
     args.entity_types = get_env_value("ENTITY_TYPES", DEFAULT_ENTITY_TYPES, list)
     args.whitelist_paths = get_env_value("WHITELIST_PATHS", "/health,/api/*")
 
     # Trilingual entity extractor configuration
-    args.use_trilingual_extractor = get_env_value(
-        "USE_TRILINGUAL_EXTRACTOR", False, bool
+    args.use_trilingual_extractor = get_env_value_with_fallback(
+        "LIGHTRAG_ENTITY_EXTRACTION_USE_TRILINGUAL",
+        "USE_TRILINGUAL_EXTRACTOR",
+        False,
+        bool,
     )
-    args.trilingual_auto_detect_language = get_env_value(
-        "TRILINGUAL_AUTO_DETECT_LANGUAGE", True, bool
+    args.trilingual_auto_detect_language = get_env_value_with_fallback(
+        "LIGHTRAG_ENTITY_EXTRACTION_AUTO_DETECT_LANGUAGE",
+        "TRILINGUAL_AUTO_DETECT_LANGUAGE",
+        True,
+        bool,
     )
-    args.trilingual_fallback_to_llm = get_env_value(
-        "TRILINGUAL_FALLBACK_TO_LLM", True, bool
+    args.trilingual_fallback_to_llm = get_env_value_with_fallback(
+        "LIGHTRAG_ENTITY_EXTRACTION_FALLBACK_TO_LLM",
+        "TRILINGUAL_FALLBACK_TO_LLM",
+        True,
+        bool,
     )
-    args.trilingual_default_language = get_env_value(
-        "TRILINGUAL_DEFAULT_LANGUAGE", "en"
+    args.trilingual_default_language = get_env_value_with_fallback(
+        "LIGHTRAG_ENTITY_EXTRACTION_DEFAULT_LANGUAGE",
+        "TRILINGUAL_DEFAULT_LANGUAGE",
+        "en",
+    )
+    args.trilingual_chinese_model = get_env_value(
+        "TRILINGUAL_CHINESE_MODEL", "CLOSE_TOK_POS_NER_SRL_DEP_SDP_CON_ELECTRA_BASE_ZH"
+    )
+    args.trilingual_english_model = get_env_value(
+        "TRILINGUAL_ENGLISH_MODEL", "en_core_web_trf"
+    )
+    args.trilingual_swedish_model = get_env_value(
+        "TRILINGUAL_SWEDISH_MODEL", "sv_core_news_lg"
     )
 
     # For JWT Auth
@@ -420,46 +645,110 @@ def parse_args() -> argparse.Namespace:
     args.guest_token_expire_hours = get_env_value("GUEST_TOKEN_EXPIRE_HOURS", 24, int)
     args.jwt_algorithm = get_env_value("JWT_ALGORITHM", "HS256")
 
-    # Rerank model configuration
-    args.rerank_model = get_env_value("RERANK_MODEL", None)
-    args.rerank_binding_host = get_env_value("RERANK_BINDING_HOST", None)
-    args.rerank_binding_api_key = get_env_value("RERANK_BINDING_API_KEY", None)
-    # Note: rerank_binding is already set by argparse, no need to override from env
+    # Load provider-specific Rerank configuration
+    rerank_provider = args.rerank_binding
+    if rerank_provider == "cohere":
+        args.rerank_model = get_env_value_with_fallback(
+            "LIGHTRAG_RERANK_COHERE_MODEL", "RERANK_MODEL", "rerank-english-v2.0"
+        )
+        args.rerank_binding_api_key = get_env_value_with_fallback(
+            "LIGHTRAG_RERANK_COHERE_API_KEY", "RERANK_BINDING_API_KEY", None, special_none=True
+        )
+        args.rerank_binding_host = "https://api.cohere.ai"
+    elif rerank_provider == "jina":
+        args.rerank_model = get_env_value_with_fallback(
+            "LIGHTRAG_RERANK_JINA_MODEL", "RERANK_MODEL", "jina-reranker-v1-base-en"
+        )
+        args.rerank_binding_api_key = get_env_value_with_fallback(
+            "LIGHTRAG_RERANK_JINA_API_KEY", "RERANK_BINDING_API_KEY", None, special_none=True
+        )
+        args.rerank_binding_host = "https://api.jina.ai"
+    elif rerank_provider == "aliyun":
+        args.rerank_model = get_env_value_with_fallback(
+            "LIGHTRAG_RERANK_ALIYUN_MODEL", "RERANK_MODEL", "gte-rerank"
+        )
+        args.rerank_binding_api_key = get_env_value_with_fallback(
+            "LIGHTRAG_RERANK_ALIYUN_API_KEY", "RERANK_BINDING_API_KEY", None, special_none=True
+        )
+        args.rerank_binding_host = "https://dashscope.aliyuncs.com"
+    else:  # null or unknown provider
+        args.rerank_model = get_env_value_with_fallback(
+            "LIGHTRAG_RERANK_MODEL", "RERANK_MODEL", None, special_none=True
+        )
+        args.rerank_binding_host = get_env_value_with_fallback(
+            "LIGHTRAG_RERANK_BASE_URL", "RERANK_BINDING_HOST", None, special_none=True
+        )
+        args.rerank_binding_api_key = get_env_value_with_fallback(
+            "LIGHTRAG_RERANK_API_KEY", "RERANK_BINDING_API_KEY", None, special_none=True
+        )
 
     # Min rerank score configuration
-    args.min_rerank_score = get_env_value(
-        "MIN_RERANK_SCORE", DEFAULT_MIN_RERANK_SCORE, float
+    args.min_rerank_score = get_env_value_with_fallback(
+        "LIGHTRAG_QUERY_MIN_RERANK_SCORE",
+        "MIN_RERANK_SCORE",
+        DEFAULT_MIN_RERANK_SCORE,
+        float,
     )
 
     # Query configuration
-    args.history_turns = get_env_value("HISTORY_TURNS", DEFAULT_HISTORY_TURNS, int)
-    args.top_k = get_env_value("TOP_K", DEFAULT_TOP_K, int)
-    args.chunk_top_k = get_env_value("CHUNK_TOP_K", DEFAULT_CHUNK_TOP_K, int)
-    args.max_entity_tokens = get_env_value(
-        "MAX_ENTITY_TOKENS", DEFAULT_MAX_ENTITY_TOKENS, int
+    args.history_turns = get_env_value_with_fallback(
+        "LIGHTRAG_QUERY_HISTORY_TURNS", "HISTORY_TURNS", DEFAULT_HISTORY_TURNS, int
     )
-    args.max_relation_tokens = get_env_value(
-        "MAX_RELATION_TOKENS", DEFAULT_MAX_RELATION_TOKENS, int
+    args.top_k = get_env_value_with_fallback(
+        "LIGHTRAG_QUERY_TOP_K", "TOP_K", DEFAULT_TOP_K, int
     )
-    args.max_total_tokens = get_env_value(
-        "MAX_TOTAL_TOKENS", DEFAULT_MAX_TOTAL_TOKENS, int
+    args.chunk_top_k = get_env_value_with_fallback(
+        "LIGHTRAG_QUERY_CHUNK_TOP_K", "CHUNK_TOP_K", DEFAULT_CHUNK_TOP_K, int
     )
-    args.cosine_threshold = get_env_value(
-        "COSINE_THRESHOLD", DEFAULT_COSINE_THRESHOLD, float
+    args.max_entity_tokens = get_env_value_with_fallback(
+        "LIGHTRAG_QUERY_MAX_ENTITY_TOKENS",
+        "MAX_ENTITY_TOKENS",
+        DEFAULT_MAX_ENTITY_TOKENS,
+        int,
     )
-    args.related_chunk_number = get_env_value(
-        "RELATED_CHUNK_NUMBER", DEFAULT_RELATED_CHUNK_NUMBER, int
+    args.max_relation_tokens = get_env_value_with_fallback(
+        "LIGHTRAG_QUERY_MAX_RELATION_TOKENS",
+        "MAX_RELATION_TOKENS",
+        DEFAULT_MAX_RELATION_TOKENS,
+        int,
+    )
+    args.max_total_tokens = get_env_value_with_fallback(
+        "LIGHTRAG_QUERY_MAX_TOTAL_TOKENS",
+        "MAX_TOTAL_TOKENS",
+        DEFAULT_MAX_TOTAL_TOKENS,
+        int,
+    )
+    args.cosine_threshold = get_env_value_with_fallback(
+        "LIGHTRAG_QUERY_COSINE_THRESHOLD",
+        "COSINE_THRESHOLD",
+        DEFAULT_COSINE_THRESHOLD,
+        float,
+    )
+    args.related_chunk_number = get_env_value_with_fallback(
+        "LIGHTRAG_QUERY_RELATED_CHUNK_NUMBER",
+        "RELATED_CHUNK_NUMBER",
+        DEFAULT_RELATED_CHUNK_NUMBER,
+        int,
     )
 
     # Add missing environment variables for health endpoint
-    args.force_llm_summary_on_merge = get_env_value(
-        "FORCE_LLM_SUMMARY_ON_MERGE", DEFAULT_FORCE_LLM_SUMMARY_ON_MERGE, int
+    args.force_llm_summary_on_merge = get_env_value_with_fallback(
+        "LIGHTRAG_PERFORMANCE_FORCE_LLM_SUMMARY_ON_MERGE",
+        "FORCE_LLM_SUMMARY_ON_MERGE",
+        DEFAULT_FORCE_LLM_SUMMARY_ON_MERGE,
+        int,
     )
-    args.embedding_func_max_async = get_env_value(
-        "EMBEDDING_FUNC_MAX_ASYNC", DEFAULT_EMBEDDING_FUNC_MAX_ASYNC, int
+    args.embedding_func_max_async = get_env_value_with_fallback(
+        "LIGHTRAG_PERFORMANCE_EMBEDDING_FUNC_MAX_ASYNC",
+        "EMBEDDING_FUNC_MAX_ASYNC",
+        DEFAULT_EMBEDDING_FUNC_MAX_ASYNC,
+        int,
     )
-    args.embedding_batch_num = get_env_value(
-        "EMBEDDING_BATCH_NUM", DEFAULT_EMBEDDING_BATCH_NUM, int
+    args.embedding_batch_num = get_env_value_with_fallback(
+        "LIGHTRAG_PERFORMANCE_EMBEDDING_BATCH_NUM",
+        "EMBEDDING_BATCH_NUM",
+        DEFAULT_EMBEDDING_BATCH_NUM,
+        int,
     )
 
     # Embedding token limit configuration

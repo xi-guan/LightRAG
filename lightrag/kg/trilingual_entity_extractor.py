@@ -21,26 +21,40 @@ logger = logging.getLogger(__name__)
 class TrilingualEntityExtractor:
     """三语言实体提取器（中/英/瑞典）"""
 
-    def __init__(self):
-        """初始化（延迟加载模型）"""
+    def __init__(
+        self,
+        chinese_model: str = "CLOSE_TOK_POS_NER_SRL_DEP_SDP_CON_ELECTRA_BASE_ZH",
+        english_model: str = "en_core_web_trf",
+        swedish_model: str = "sv_core_news_lg",
+    ):
+        """初始化（延迟加载模型）
+
+        Args:
+            chinese_model: HanLP 中文模型名称
+            english_model: spaCy 英文模型名称
+            swedish_model: spaCy 瑞典语模型名称
+        """
         self._spacy_en = None
         self._spacy_sv = None
         self._hanlp = None
+        self.chinese_model = chinese_model
+        self.english_model = english_model
+        self.swedish_model = swedish_model
 
     @property
     def spacy_en(self):
         """延迟加载英文模型"""
         if self._spacy_en is None:
-            logger.info("Loading English spaCy model (en_core_web_trf)...")
+            logger.info(f"Loading English spaCy model ({self.english_model})...")
             try:
                 import spacy
 
-                self._spacy_en = spacy.load("en_core_web_trf")
+                self._spacy_en = spacy.load(self.english_model)
                 logger.info("✓ English model loaded successfully")
             except OSError:
                 logger.error(
-                    "English model not found. Please run: "
-                    "python -m spacy download en_core_web_trf"
+                    f"English model not found. Please run: "
+                    f"python -m spacy download {self.english_model}"
                 )
                 raise
         return self._spacy_en
@@ -49,16 +63,16 @@ class TrilingualEntityExtractor:
     def spacy_sv(self):
         """延迟加载瑞典语模型"""
         if self._spacy_sv is None:
-            logger.info("Loading Swedish spaCy model (sv_core_news_lg)...")
+            logger.info(f"Loading Swedish spaCy model ({self.swedish_model})...")
             try:
                 import spacy
 
-                self._spacy_sv = spacy.load("sv_core_news_lg")
+                self._spacy_sv = spacy.load(self.swedish_model)
                 logger.info("✓ Swedish model loaded successfully")
             except OSError:
                 logger.error(
-                    "Swedish model not found. Please run: "
-                    "python -m spacy download sv_core_news_lg"
+                    f"Swedish model not found. Please run: "
+                    f"python -m spacy download {self.swedish_model}"
                 )
                 raise
         return self._spacy_sv
@@ -67,13 +81,19 @@ class TrilingualEntityExtractor:
     def hanlp(self):
         """延迟加载中文模型"""
         if self._hanlp is None:
-            logger.info("Loading Chinese HanLP model...")
+            logger.info(f"Loading Chinese HanLP model ({self.chinese_model})...")
             try:
                 import hanlp
 
-                self._hanlp = hanlp.load(
-                    hanlp.pretrained.mtl.CLOSE_TOK_POS_NER_SRL_DEP_SDP_CON_ELECTRA_BASE_ZH
-                )
+                # Try to get model from hanlp.pretrained.mtl first
+                model_path = None
+                if hasattr(hanlp.pretrained.mtl, self.chinese_model):
+                    model_path = getattr(hanlp.pretrained.mtl, self.chinese_model)
+                else:
+                    # Fallback: use chinese_model as direct path
+                    model_path = self.chinese_model
+
+                self._hanlp = hanlp.load(model_path)
                 logger.info("✓ Chinese model loaded successfully")
             except Exception as e:
                 logger.error(f"Failed to load HanLP model: {e}")

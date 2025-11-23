@@ -9,6 +9,13 @@ import {
   DialogTitle,
   DialogTrigger
 } from '@/components/ui/Dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/Select'
 import FileUploader from '@/components/ui/FileUploader'
 import { toast } from 'sonner'
 import { errorMessage } from '@/lib/utils'
@@ -27,6 +34,7 @@ export default function UploadDocumentsDialog({ onDocumentsUploaded }: UploadDoc
   const [isUploading, setIsUploading] = useState(false)
   const [progresses, setProgresses] = useState<Record<string, number>>({})
   const [fileErrors, setFileErrors] = useState<Record<string, string>>({})
+  const [selectedLanguage, setSelectedLanguage] = useState<string>('auto')
 
   const handleRejectedFiles = useCallback(
     (rejectedFiles: FileRejection[]) => {
@@ -95,13 +103,17 @@ export default function UploadDocumentsDialog({ onDocumentsUploaded }: UploadDoc
               [file.name]: 0
             }))
 
-            const result = await uploadDocument(file, (percentCompleted: number) => {
-              console.debug(t('documentPanel.uploadDocuments.single.uploading', { name: file.name, percent: percentCompleted }))
-              setProgresses((pre) => ({
-                ...pre,
-                [file.name]: percentCompleted
-              }))
-            })
+            const result = await uploadDocument(
+              file,
+              selectedLanguage === 'auto' ? undefined : selectedLanguage,
+              (percentCompleted: number) => {
+                console.debug(t('documentPanel.uploadDocuments.single.uploading', { name: file.name, percent: percentCompleted }))
+                setProgresses((pre) => ({
+                  ...pre,
+                  [file.name]: percentCompleted
+                }))
+              }
+            )
 
             if (result.status === 'duplicated') {
               uploadErrors[file.name] = t('documentPanel.uploadDocuments.fileUploader.duplicateFile')
@@ -175,7 +187,7 @@ export default function UploadDocumentsDialog({ onDocumentsUploaded }: UploadDoc
         setIsUploading(false)
       }
     },
-    [setIsUploading, setProgresses, setFileErrors, t, onDocumentsUploaded]
+    [setIsUploading, setProgresses, setFileErrors, selectedLanguage, t, onDocumentsUploaded]
   )
 
   return (
@@ -204,16 +216,34 @@ export default function UploadDocumentsDialog({ onDocumentsUploaded }: UploadDoc
             {t('documentPanel.uploadDocuments.description')}
           </DialogDescription>
         </DialogHeader>
-        <FileUploader
-          maxFileCount={Infinity}
-          maxSize={200 * 1024 * 1024}
-          description={t('documentPanel.uploadDocuments.fileTypes')}
-          onUpload={handleDocumentsUpload}
-          onReject={handleRejectedFiles}
-          progresses={progresses}
-          fileErrors={fileErrors}
-          disabled={isUploading}
-        />
+        <div className="space-y-4">
+          <div className="flex items-center gap-4">
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
+              Language:
+            </label>
+            <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="auto">Auto Detect</SelectItem>
+                <SelectItem value="zh">中文</SelectItem>
+                <SelectItem value="en">English</SelectItem>
+                <SelectItem value="sv">Svenska</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <FileUploader
+            maxFileCount={Infinity}
+            maxSize={200 * 1024 * 1024}
+            description={t('documentPanel.uploadDocuments.fileTypes')}
+            onUpload={handleDocumentsUpload}
+            onReject={handleRejectedFiles}
+            progresses={progresses}
+            fileErrors={fileErrors}
+            disabled={isUploading}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   )

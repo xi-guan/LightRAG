@@ -692,6 +692,8 @@ class DocProcessingStatus:
     """ISO format timestamp when document was last updated"""
     track_id: str | None = None
     """Tracking ID for monitoring progress"""
+    language: str | None = None
+    """Language for entity extraction (zh/en/sv), if not specified uses global default"""
     chunks_count: int | None = None
     """Number of chunks after splitting, used for processing"""
     chunks_list: list[str] | None = field(default_factory=list)

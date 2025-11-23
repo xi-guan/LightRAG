@@ -104,6 +104,10 @@
 # LightRAG 通用配置示例
 # ============================================================
 
+# ============================================================
+# 1. 服务层配置（对外接口）
+# ============================================================
+
 # API 密钥（自动生成）
 - section: lightrag.api.secret_key
   type: secret
@@ -123,49 +127,230 @@
   default: false
   description: "Enable debug mode"
 
-# 数据库配置
-- section: lightrag.database.type
-  default: "sqlite"
-  description: "Database type (sqlite/postgres/mysql)"
+# 安全配置
+- section: lightrag.security.enable_api_key
+  default: false
+  description: "Require API key for requests"
 
-- section: lightrag.database.path
-  default: "./data/lightrag.db"
-  description: "Database file path (for SQLite)"
+- section: lightrag.security.allowed_origins
+  default: "*"
+  description: "CORS allowed origins (comma-separated)"
 
-# 向量数据库配置
-- section: lightrag.vector_db.type
-  default: "nano"
-  description: "Vector database type (nano/milvus/qdrant/chroma)"
+- section: lightrag.security.rate_limit
+  default: 100
+  description: "API rate limit (requests per minute per IP)"
 
-- section: lightrag.vector_db.dimension
-  default: 1536
-  description: "Vector dimension"
+# ============================================================
+# 2. 模型层配置（AI 核心）
+# ============================================================
 
-# LLM 配置
+# LLM 配置（分层结构：每个 provider 独立配置块）
 - section: lightrag.llm.provider
-  default: "openai"
-  description: "LLM provider (openai/anthropic/ollama/custom)"
+  default: "ollama"
+  description: "LLM provider selection (ollama/openai/azure_openai/anthropic/gemini/aws_bedrock)"
 
-- section: lightrag.llm.model
+# LLM - OpenAI 配置
+- section: lightrag.llm.openai.model
   default: "gpt-4o-mini"
-  description: "LLM model name"
+  description: "OpenAI model name"
 
-- section: lightrag.llm.api_key
+- section: lightrag.llm.openai.api_key
   type: secret
   auto_generate: false
-  description: "LLM API key (user-provided)"
+  description: "OpenAI API key"
 
-- section: lightrag.llm.base_url
+- section: lightrag.llm.openai.base_url
   default: ""
-  description: "Custom LLM base URL (optional)"
+  description: "OpenAI base URL (optional, for custom endpoints)"
 
-- section: lightrag.llm.max_tokens
+- section: lightrag.llm.openai.max_tokens
   default: 4096
-  description: "Maximum tokens per request"
+  description: "OpenAI max tokens"
 
-- section: lightrag.llm.temperature
+- section: lightrag.llm.openai.temperature
   default: 0.0
-  description: "LLM temperature (0.0-1.0)"
+  description: "OpenAI temperature (0.0-1.0)"
+
+# LLM - Ollama 配置
+- section: lightrag.llm.ollama.model
+  default: "mistral-nemo:latest"
+  description: "Ollama model name"
+
+- section: lightrag.llm.ollama.host
+  default: "http://localhost:11434"
+  description: "Ollama server host"
+
+- section: lightrag.llm.ollama.max_tokens
+  default: 4096
+  description: "Ollama max tokens"
+
+- section: lightrag.llm.ollama.temperature
+  default: 0.0
+  description: "Ollama temperature (0.0-1.0)"
+
+- section: lightrag.llm.ollama.num_ctx
+  default: 32768
+  description: "Ollama context window size"
+
+# LLM - Azure OpenAI 配置
+- section: lightrag.llm.azure_openai.model
+  default: "gpt-4"
+  description: "Azure OpenAI model name"
+
+- section: lightrag.llm.azure_openai.api_key
+  type: secret
+  auto_generate: false
+  description: "Azure OpenAI API key"
+
+- section: lightrag.llm.azure_openai.endpoint
+  default: ""
+  description: "Azure OpenAI endpoint URL"
+
+- section: lightrag.llm.azure_openai.deployment
+  default: ""
+  description: "Azure OpenAI deployment name"
+
+- section: lightrag.llm.azure_openai.max_tokens
+  default: 4096
+  description: "Azure OpenAI max tokens"
+
+- section: lightrag.llm.azure_openai.temperature
+  default: 0.0
+  description: "Azure OpenAI temperature (0.0-1.0)"
+
+# LLM - Anthropic 配置
+- section: lightrag.llm.anthropic.model
+  default: "claude-3-sonnet-20240229"
+  description: "Anthropic model name"
+
+- section: lightrag.llm.anthropic.api_key
+  type: secret
+  auto_generate: false
+  description: "Anthropic API key"
+
+- section: lightrag.llm.anthropic.max_tokens
+  default: 4096
+  description: "Anthropic max tokens"
+
+- section: lightrag.llm.anthropic.temperature
+  default: 0.0
+  description: "Anthropic temperature (0.0-1.0)"
+
+# LLM - Gemini 配置
+- section: lightrag.llm.gemini.model
+  default: "gemini-pro"
+  description: "Gemini model name"
+
+- section: lightrag.llm.gemini.api_key
+  type: secret
+  auto_generate: false
+  description: "Gemini API key"
+
+- section: lightrag.llm.gemini.max_tokens
+  default: 4096
+  description: "Gemini max tokens"
+
+- section: lightrag.llm.gemini.temperature
+  default: 0.0
+  description: "Gemini temperature (0.0-1.0)"
+
+# Embedding 配置（分层结构）
+- section: lightrag.embedding.provider
+  default: "ollama"
+  description: "Embedding provider selection (ollama/openai/azure_openai/jina/gemini)"
+
+# Embedding - Ollama 配置
+- section: lightrag.embedding.ollama.model
+  default: "bge-m3:latest"
+  description: "Ollama embedding model name"
+
+- section: lightrag.embedding.ollama.host
+  default: "http://localhost:11434"
+  description: "Ollama server host"
+
+- section: lightrag.embedding.ollama.dimension
+  default: 1024
+  description: "Ollama embedding dimension"
+
+# Embedding - OpenAI 配置
+- section: lightrag.embedding.openai.model
+  default: "text-embedding-3-small"
+  description: "OpenAI embedding model name"
+
+- section: lightrag.embedding.openai.api_key
+  type: secret
+  auto_generate: false
+  description: "OpenAI API key"
+
+- section: lightrag.embedding.openai.base_url
+  default: ""
+  description: "OpenAI base URL (optional)"
+
+- section: lightrag.embedding.openai.dimension
+  default: 1536
+  description: "OpenAI embedding dimension"
+
+# Embedding - Jina 配置
+- section: lightrag.embedding.jina.model
+  default: "jina-embeddings-v2-base-en"
+  description: "Jina embedding model name"
+
+- section: lightrag.embedding.jina.api_key
+  type: secret
+  auto_generate: false
+  description: "Jina API key"
+
+- section: lightrag.embedding.jina.dimension
+  default: 768
+  description: "Jina embedding dimension"
+
+# Rerank 配置（分层结构）
+- section: lightrag.rerank.provider
+  default: "null"
+  description: "Rerank provider selection (null/cohere/jina/aliyun)"
+
+# Rerank - Cohere 配置
+- section: lightrag.rerank.cohere.model
+  default: "rerank-english-v2.0"
+  description: "Cohere rerank model name"
+
+- section: lightrag.rerank.cohere.api_key
+  type: secret
+  auto_generate: false
+  description: "Cohere API key"
+
+# Rerank - Jina 配置
+- section: lightrag.rerank.jina.model
+  default: "jina-reranker-v1-base-en"
+  description: "Jina rerank model name"
+
+- section: lightrag.rerank.jina.api_key
+  type: secret
+  auto_generate: false
+  description: "Jina API key"
+
+# Rerank - Aliyun 配置
+- section: lightrag.rerank.aliyun.model
+  default: "gte-rerank"
+  description: "Aliyun rerank model name"
+
+- section: lightrag.rerank.aliyun.api_key
+  type: secret
+  auto_generate: false
+  description: "Aliyun API key"
+
+# ============================================================
+# 3. 处理层配置（数据处理流程）
+# ============================================================
+
+# 分块配置
+- section: lightrag.chunking.chunk_size
+  default: 1200
+  description: "Text chunk size (characters)"
+
+- section: lightrag.chunking.chunk_overlap_size
+  default: 100
+  description: "Chunk overlap size (characters)"
 
 # 实体提取配置
 - section: lightrag.entity_extraction.max_gleaning
@@ -197,15 +382,89 @@
   default: "llm"
   description: "Relation extraction method (llm/pattern/hybrid)"
 
-# 安全配置
-- section: lightrag.security.enable_api_key
-  default: false
-  description: "Require API key for requests"
+# Summary 配置
+- section: lightrag.summary.language
+  default: "English"
+  description: "Summary language for entity/relation descriptions (English/Chinese/etc)"
 
-- section: lightrag.security.allowed_origins
-  default: "*"
-  description: "CORS allowed origins (comma-separated)"
+# ============================================================
+# 4. 存储层配置（持久化）
+# ============================================================
 
-- section: lightrag.security.rate_limit
-  default: 100
-  description: "API rate limit (requests per minute per IP)"
+# 存储配置
+- section: lightrag.storage.kv_storage
+  default: "JsonKVStorage"
+  description: "KV storage type (JsonKVStorage/PGKVStorage/RedisKVStorage/MongoKVStorage)"
+
+- section: lightrag.storage.vector_storage
+  default: "NanoVectorDBStorage"
+  description: "Vector storage type (NanoVectorDBStorage/PGVectorStorage/MilvusVectorDBStorage/QdrantStorage/ChromaVectorDBStorage)"
+
+- section: lightrag.storage.graph_storage
+  default: "NetworkXStorage"
+  description: "Graph storage type (NetworkXStorage/Neo4JStorage/PGGraphStorage/MemgraphStorage)"
+
+- section: lightrag.storage.doc_status_storage
+  default: "JsonDocStatusStorage"
+  description: "Document status storage type (JsonDocStatusStorage/PGDocStatusStorage/MongoDocStatusStorage)"
+
+# 数据库配置
+- section: lightrag.database.type
+  default: "sqlite"
+  description: "Database type (sqlite/postgres/mysql)"
+
+- section: lightrag.database.path
+  default: "./data/lightrag.db"
+  description: "Database file path (for SQLite)"
+
+# 向量数据库配置
+- section: lightrag.vector_db.type
+  default: "nano"
+  description: "Vector database type (nano/milvus/qdrant/chroma)"
+
+- section: lightrag.vector_db.dimension
+  default: 1536
+  description: "Vector dimension"
+
+# ============================================================
+# 5. 优化层配置（性能调优）
+# ============================================================
+
+# 查询配置
+- section: lightrag.query.top_k
+  default: 60
+  description: "Top-K entities/relations to retrieve"
+
+- section: lightrag.query.chunk_top_k
+  default: 5
+  description: "Top-K text chunks to retrieve"
+
+- section: lightrag.query.max_entity_tokens
+  default: 12000
+  description: "Maximum entity tokens in context"
+
+- section: lightrag.query.max_relation_tokens
+  default: 12000
+  description: "Maximum relation tokens in context"
+
+- section: lightrag.query.max_total_tokens
+  default: 40000
+  description: "Maximum total tokens in context"
+
+# LLM 缓存配置
+- section: lightrag.cache.enable_llm_cache
+  default: true
+  description: "Enable LLM response caching"
+
+- section: lightrag.cache.enable_llm_cache_for_extract
+  default: true
+  description: "Enable LLM cache for entity extraction"
+
+# 性能配置
+- section: lightrag.performance.max_async
+  default: 4
+  description: "Maximum concurrent LLM requests"
+
+- section: lightrag.performance.max_parallel_insert
+  default: 2
+  description: "Maximum parallel document processing"

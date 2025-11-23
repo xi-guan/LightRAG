@@ -588,10 +588,14 @@ export const insertTexts = async (texts: string[]): Promise<DocActionResponse> =
 
 export const uploadDocument = async (
   file: File,
+  language?: string,
   onUploadProgress?: (percentCompleted: number) => void
 ): Promise<DocActionResponse> => {
   const formData = new FormData()
   formData.append('file', file)
+  if (language) {
+    formData.append('language', language)
+  }
 
   const response = await axiosInstance.post('/documents/upload', formData, {
     headers: {

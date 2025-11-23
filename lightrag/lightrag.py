@@ -1280,6 +1280,7 @@ class LightRAG:
         ids: list[str] | None = None,
         file_paths: str | list[str] | None = None,
         track_id: str | None = None,
+        language: str | None = None,
     ) -> str:
         """
         Pipeline for Processing Documents
@@ -1294,6 +1295,7 @@ class LightRAG:
             ids: list of unique document IDs, if not provided, MD5 hash IDs will be generated
             file_paths: list of file paths corresponding to each document, used for citation
             track_id: tracking ID for monitoring processing status, if not provided, will be generated with "enqueue" prefix
+            language: language for entity extraction (zh/en/sv), if not provided, uses global default
 
         Returns:
             str: tracking ID for monitoring processing status
@@ -1371,6 +1373,7 @@ class LightRAG:
                     "file_path"
                 ],  # Store file path in document status
                 "track_id": track_id,  # Store track_id in document status
+                "language": language,  # Store language setting in document status
             }
             for id_, content_data in contents.items()
         }
@@ -1789,10 +1792,11 @@ class LightRAG:
                                 if pipeline_status.get("cancellation_requested", False):
                                     raise PipelineCancelledException("User cancelled")
 
-                            # Get file path from status document
+                            # Get file path and language from status document
                             file_path = getattr(
                                 status_doc, "file_path", "unknown_source"
                             )
+                            doc_language = getattr(status_doc, "language", None)
 
                             async with pipeline_status_lock:
                                 # Update processed file count and save current file number
@@ -1889,6 +1893,7 @@ class LightRAG:
                                             ).isoformat(),
                                             "file_path": file_path,
                                             "track_id": status_doc.track_id,  # Preserve existing track_id
+                                            "language": doc_language,  # Preserve language setting
                                             "metadata": {
                                                 "processing_start_time": processing_start_time
                                             },
@@ -1917,7 +1922,10 @@ class LightRAG:
                             # Stage 2: Process entity relation graph (after text_chunks are saved)
                             entity_relation_task = asyncio.create_task(
                                 self._process_extract_entities(
-                                    chunks, pipeline_status, pipeline_status_lock
+                                    chunks,
+                                    pipeline_status,
+                                    pipeline_status_lock,
+                                    doc_language=doc_language,
                                 )
                             )
                             chunk_results = await entity_relation_task
@@ -2186,12 +2194,25 @@ class LightRAG:
                 pipeline_status["history_messages"].append(log_message)
 
     async def _process_extract_entities(
-        self, chunk: dict[str, Any], pipeline_status=None, pipeline_status_lock=None
+        self,
+        chunk: dict[str, Any],
+        pipeline_status=None,
+        pipeline_status_lock=None,
+        doc_language: str | None = None,
     ) -> list:
         try:
+            # prepare global config with document-specific language override
+            config = asdict(self)
+            if doc_language:
+                # override language in addon_params if doc has specific language
+                if "addon_params" not in config:
+                    config["addon_params"] = {}
+                config["addon_params"]["language"] = doc_language
+                logger.info(f"Overriding language to '{doc_language}' for document-level entity extraction")
+
             chunk_results = await extract_entities(
                 chunk,
-                global_config=asdict(self),
+                global_config=config,
                 pipeline_status=pipeline_status,
                 pipeline_status_lock=pipeline_status_lock,
                 llm_response_cache=self.llm_response_cache,

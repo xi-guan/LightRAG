@@ -999,8 +999,15 @@ def create_app(args):
                 TrilingualEntityExtractor,
             )
 
-            entity_extractor = TrilingualEntityExtractor()
+            entity_extractor = TrilingualEntityExtractor(
+                chinese_model=args.trilingual_chinese_model,
+                english_model=args.trilingual_english_model,
+                swedish_model=args.trilingual_swedish_model,
+            )
             logger.info("Trilingual entity extractor initialized successfully")
+            logger.info(f"  - Chinese model: {args.trilingual_chinese_model}")
+            logger.info(f"  - English model: {args.trilingual_english_model}")
+            logger.info(f"  - Swedish model: {args.trilingual_swedish_model}")
             logger.info(f"  - Fallback to LLM: {args.trilingual_fallback_to_llm}")
             logger.info(f"  - Default language: {args.trilingual_default_language}")
         except ImportError as e:

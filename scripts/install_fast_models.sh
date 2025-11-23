@@ -11,46 +11,82 @@ echo "=================================================="
 echo ""
 
 # 检查 Python 版本
-echo "🔍 检查 Python 版本..."
+echo "→ 检查 Python 版本..."
 python_version=$(python3 --version 2>&1 | awk '{print $2}')
-echo "   Python 版本: $python_version"
+echo "  Python 版本: $python_version"
 
 # 安装 Python 依赖
 echo ""
-echo "📦 安装 Python 依赖包..."
-echo "   - spaCy (英文 + 瑞典语)"
-echo "   - HanLP (中文)"
+echo "→ 安装 Python 依赖包..."
+echo "  - spaCy (英文 + 瑞典语)"
+echo "  - HanLP (中文)"
 echo ""
 
 # 检查是否安装了 uv
 if command -v uv &> /dev/null; then
-    echo "   使用 uv 安装 (超快速!)..."
+    echo "  使用 uv 安装 (超快速!)..."
     uv pip install -e ".[fast]"
+    uv pip install pip  # 确保虚拟环境有 pip (spacy download 需要)
 else
-    echo "   使用 pip 安装..."
-    echo "   💡 提示: 安装 uv 可获得 10-100 倍速度提升"
-    echo "      curl -LsSf https://astral.sh/uv/install.sh | sh"
+    echo "  使用 pip 安装..."
+    echo "  ! 提示: 安装 uv 可获得 10-100 倍速度提升"
+    echo "    curl -LsSf https://astral.sh/uv/install.sh | sh"
     pip install -e ".[fast]"
 fi
 
+# 检查 spaCy 模型是否已安装
+check_spacy_model() {
+    local model=$1
+    if command -v uv &> /dev/null; then
+        PYTHONWARNINGS="ignore" uv run python -c "import spacy; spacy.load('$model')" 2>/dev/null
+    else
+        PYTHONWARNINGS="ignore" python3 -c "import spacy; spacy.load('$model')" 2>/dev/null
+    fi
+    return $?
+}
+
 # 下载 spaCy 英文模型
 echo ""
-echo "⬇️  下载 spaCy 英文模型 (en_core_web_trf, ~440 MB)..."
-python3 -m spacy download en_core_web_trf
+if check_spacy_model "en_core_web_trf"; then
+    echo "  ✓ 英文模型已安装 (en_core_web_trf)"
+else
+    echo "↓ 下载 spaCy 英文模型 (en_core_web_trf, ~440 MB)..."
+    if command -v uv &> /dev/null; then
+        PYTHONWARNINGS="ignore" uv run python -m spacy download en_core_web_trf 2>&1 | \
+            grep -v "Requirement already satisfied" | \
+            grep -E "(Downloading|Download and installation|✔|━)"
+    else
+        PYTHONWARNINGS="ignore" python3 -m spacy download en_core_web_trf 2>&1 | \
+            grep -v "Requirement already satisfied" | \
+            grep -E "(Downloading|Download and installation|✔|━)"
+    fi
+fi
 
 # 下载 spaCy 瑞典语模型
 echo ""
-echo "⬇️  下载 spaCy 瑞典语模型 (sv_core_news_lg, ~545 MB)..."
-python3 -m spacy download sv_core_news_lg
+if check_spacy_model "sv_core_news_lg"; then
+    echo "  ✓ 瑞典语模型已安装 (sv_core_news_lg)"
+else
+    echo "↓ 下载 spaCy 瑞典语模型 (sv_core_news_lg, ~545 MB)..."
+    if command -v uv &> /dev/null; then
+        PYTHONWARNINGS="ignore" uv run python -m spacy download sv_core_news_lg 2>&1 | \
+            grep -v "Requirement already satisfied" | \
+            grep -E "(Downloading|Download and installation|✔|━)"
+    else
+        PYTHONWARNINGS="ignore" python3 -m spacy download sv_core_news_lg 2>&1 | \
+            grep -v "Requirement already satisfied" | \
+            grep -E "(Downloading|Download and installation|✔|━)"
+    fi
+fi
 
 # HanLP 提示
 echo ""
-echo "ℹ️  HanLP 中文模型会在首次使用时自动下载 (~400 MB)"
+echo "i HanLP 中文模型会在首次使用时自动下载 (~400 MB)"
 
 # 完成
 echo ""
 echo "=================================================="
-echo "  ✅ 安装完成！"
+echo "  ✓ 安装完成！"
 echo "=================================================="
 echo ""
 echo "磁盘空间使用:"

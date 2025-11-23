@@ -17,6 +17,7 @@ from fastapi import (
     BackgroundTasks,
     Depends,
     File,
+    Form,
     HTTPException,
     UploadFile,
 )
@@ -1185,7 +1186,7 @@ def _extract_xlsx(file_bytes: bytes) -> str:
 
 
 async def pipeline_enqueue_file(
-    rag: LightRAG, file_path: Path, track_id: str = None
+    rag: LightRAG, file_path: Path, track_id: str = None, language: str = None
 ) -> tuple[bool, str]:
     """Add a file to the queue for processing
 
@@ -1193,6 +1194,7 @@ async def pipeline_enqueue_file(
         rag: LightRAG instance
         file_path: Path to the saved file
         track_id: Optional tracking ID, if not provided will be generated
+        language: Optional language for entity extraction (zh/en/sv)
     Returns:
         tuple: (success: bool, track_id: str)
     """
@@ -1554,7 +1556,7 @@ async def pipeline_enqueue_file(
 
             try:
                 await rag.apipeline_enqueue_documents(
-                    content, file_paths=file_path.name, track_id=track_id
+                    content, file_paths=file_path.name, track_id=track_id, language=language
                 )
 
                 logger.info(
@@ -1638,17 +1640,20 @@ async def pipeline_enqueue_file(
                 logger.error(f"Error deleting file {file_path}: {str(e)}")
 
 
-async def pipeline_index_file(rag: LightRAG, file_path: Path, track_id: str = None):
+async def pipeline_index_file(
+    rag: LightRAG, file_path: Path, track_id: str = None, language: str = None
+):
     """Index a file with track_id
 
     Args:
         rag: LightRAG instance
         file_path: Path to the saved file
         track_id: Optional tracking ID
+        language: Optional language for entity extraction (zh/en/sv)
     """
     try:
         success, returned_track_id = await pipeline_enqueue_file(
-            rag, file_path, track_id
+            rag, file_path, track_id, language=language
         )
         if success:
             await rag.apipeline_process_enqueue_documents()
@@ -2064,7 +2069,9 @@ def create_document_routes(
         "/upload", response_model=InsertResponse, dependencies=[Depends(combined_auth)]
     )
     async def upload_to_input_dir(
-        background_tasks: BackgroundTasks, file: UploadFile = File(...)
+        background_tasks: BackgroundTasks,
+        file: UploadFile = File(...),
+        language: Optional[str] = Form(None),
     ):
         """
         Upload a file to the input directory and index it.
@@ -2076,6 +2083,7 @@ def create_document_routes(
         Args:
             background_tasks: FastAPI BackgroundTasks for async processing
             file (UploadFile): The file to be uploaded. It must have an allowed extension.
+            language (Optional[str]): Language for entity extraction (zh/en/sv). If not specified, uses global default.
 
         Returns:
             InsertResponse: A response object containing the upload status and a message.
@@ -2085,6 +2093,13 @@ def create_document_routes(
             HTTPException: If the file type is not supported (400) or other errors occur (500).
         """
         try:
+            # validate language parameter
+            if language and language not in ["zh", "en", "sv"]:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Invalid language '{language}'. Supported: zh, en, sv",
+                )
+
             # Sanitize filename to prevent Path Traversal attacks
             safe_filename = sanitize_filename(file.filename, doc_manager.input_dir)
 
@@ -2120,7 +2135,9 @@ def create_document_routes(
             track_id = generate_track_id("upload")
 
             # Add to background tasks and get track_id
-            background_tasks.add_task(pipeline_index_file, rag, file_path, track_id)
+            background_tasks.add_task(
+                pipeline_index_file, rag, file_path, track_id, language=language
+            )
 
             return InsertResponse(
                 status="success",
