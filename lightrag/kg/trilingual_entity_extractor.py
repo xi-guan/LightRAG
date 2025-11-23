@@ -162,17 +162,29 @@ class TrilingualEntityExtractor:
                 f"This may indicate an incompatible HanLP model or version."
             )
 
-        if "tok" not in result:
+        # Find tok and ner keys (may be 'tok', 'tok/fine', etc.)
+        tok_key = None
+        ner_key = None
+
+        for key in result.keys():
+            if key == "tok" or key.startswith("tok/"):
+                tok_key = key
+            if key == "ner" or key.startswith("ner/"):
+                ner_key = key
+
+        if tok_key is None:
             raise KeyError(
                 f"HanLP result missing 'tok' key. Available keys: {list(result.keys())}. "
                 f"Please ensure your HanLP model ({self.chinese_model}) supports the 'tok' task."
             )
 
-        if "ner" not in result:
+        if ner_key is None:
             raise KeyError(
                 f"HanLP result missing 'ner' key. Available keys: {list(result.keys())}. "
                 f"Please ensure your HanLP model ({self.chinese_model}) supports the 'ner' task."
             )
+
+        logger.debug(f"Using HanLP keys: tok_key='{tok_key}', ner_key='{ner_key}'")
 
         entities = []
         current_entity = []
@@ -181,7 +193,7 @@ class TrilingualEntityExtractor:
         char_position = 0
 
         # 遍历 token 和 NER 标签
-        for tokens, labels in zip(result["tok"], result["ner"]):
+        for tokens, labels in zip(result[tok_key], result[ner_key]):
             for token, label in zip(tokens, labels):
                 if label.startswith("B-"):  # Begin of entity
                     # 保存之前的实体
