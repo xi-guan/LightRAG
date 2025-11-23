@@ -2847,6 +2847,58 @@ def _convert_custom_extractor_output_to_llm_format(
     return result
 
 
+def _normalize_language_code(language: str) -> str:
+    """Normalize language name or code to ISO 639-1 code.
+
+    Converts full language names (e.g., "English", "Chinese") to their
+    ISO 639-1 codes (e.g., "en", "zh"). If already a valid ISO code,
+    returns it as-is.
+
+    Args:
+        language: Language name or ISO code
+
+    Returns:
+        ISO 639-1 language code (e.g., "en", "zh", "sv")
+
+    Examples:
+        >>> _normalize_language_code("English")
+        "en"
+        >>> _normalize_language_code("Chinese")
+        "zh"
+        >>> _normalize_language_code("en")
+        "en"
+    """
+    # Language name to ISO code mapping
+    language_name_to_code = {
+        "english": "en",
+        "chinese": "zh",
+        "swedish": "sv",
+        # Also accept Chinese variants
+        "mandarin": "zh",
+        "simplified chinese": "zh",
+        "traditional chinese": "zh",
+    }
+
+    # Normalize input for comparison
+    normalized_input = language.lower().strip()
+
+    # Check if it's already a valid ISO code
+    valid_iso_codes = {"en", "zh", "sv"}
+    if normalized_input in valid_iso_codes:
+        return normalized_input
+
+    # Try to map from language name
+    if normalized_input in language_name_to_code:
+        return language_name_to_code[normalized_input]
+
+    # If not found, log a warning and return original
+    # This allows the downstream validation to handle the error
+    logger.warning(
+        f"Unknown language '{language}'. Expected ISO code (en/zh/sv) or name (English/Chinese/Swedish)"
+    )
+    return language
+
+
 async def extract_entities(
     chunks: dict[str, TextChunkSchema],
     global_config: dict[str, str],
@@ -2924,8 +2976,10 @@ async def extract_entities(
                 import time
 
                 timestamp = int(time.time())
-                # Call custom extractor
-                entities = custom_extractor.extract(content, language=language)
+                # Call custom extractor with normalized language code
+                # Convert language name (e.g., "English") to ISO code (e.g., "en")
+                normalized_language = _normalize_language_code(language)
+                entities = custom_extractor.extract(content, language=normalized_language)
 
                 if entities and len(entities) > 0:
                     # Convert custom extractor output to LLM format
