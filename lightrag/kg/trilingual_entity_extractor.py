@@ -115,6 +115,10 @@ class TrilingualEntityExtractor:
         Raises:
             ValueError: 如果语言不支持
         """
+        logger.debug(
+            f"Extracting entities for language '{language}' (text length: {len(text)})"
+        )
+
         if language == "zh":
             return self._extract_chinese(text)
         elif language == "en":
@@ -136,7 +140,39 @@ class TrilingualEntityExtractor:
         }
         """
         # Request both tok (tokenization) and ner (named entity recognition)
-        result = self.hanlp(text, tasks=["tok", "ner"])
+        logger.debug(f"Calling HanLP with model: {self.chinese_model}")
+        try:
+            result = self.hanlp(text, tasks=["tok", "ner"])
+            logger.debug(
+                f"HanLP returned result type: {type(result).__name__}, "
+                f"keys: {list(result.keys()) if isinstance(result, dict) else 'N/A'}"
+            )
+        except Exception as e:
+            logger.error(
+                f"HanLP processing failed for text (length={len(text)}): {type(e).__name__}: {e}"
+            )
+            raise RuntimeError(
+                f"HanLP processing failed for text (length={len(text)}): {e}"
+            ) from e
+
+        # Validate that result contains required keys
+        if not isinstance(result, dict):
+            raise ValueError(
+                f"Expected dict from HanLP, got {type(result).__name__}. "
+                f"This may indicate an incompatible HanLP model or version."
+            )
+
+        if "tok" not in result:
+            raise KeyError(
+                f"HanLP result missing 'tok' key. Available keys: {list(result.keys())}. "
+                f"Please ensure your HanLP model ({self.chinese_model}) supports the 'tok' task."
+            )
+
+        if "ner" not in result:
+            raise KeyError(
+                f"HanLP result missing 'ner' key. Available keys: {list(result.keys())}. "
+                f"Please ensure your HanLP model ({self.chinese_model}) supports the 'ner' task."
+            )
 
         entities = []
         current_entity = []
