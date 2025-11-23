@@ -167,10 +167,12 @@ class TrilingualEntityExtractor:
         ner_key = None
 
         for key in result.keys():
-            if key == "tok" or key.startswith("tok/"):
-                tok_key = key
-            if key == "ner" or key.startswith("ner/"):
-                ner_key = key
+            # Ensure key is a string before calling startswith
+            if isinstance(key, str):
+                if key == "tok" or key.startswith("tok/"):
+                    tok_key = key
+                if key == "ner" or key.startswith("ner/"):
+                    ner_key = key
 
         if tok_key is None:
             raise KeyError(
@@ -195,6 +197,12 @@ class TrilingualEntityExtractor:
         # 遍历 token 和 NER 标签
         for tokens, labels in zip(result[tok_key], result[ner_key]):
             for token, label in zip(tokens, labels):
+                # Convert label to string if it's not already (HanLP may return int labels)
+                if not isinstance(label, str):
+                    label = str(label)
+                if not isinstance(token, str):
+                    token = str(token)
+
                 if label.startswith("B-"):  # Begin of entity
                     # 保存之前的实体
                     if current_entity:
