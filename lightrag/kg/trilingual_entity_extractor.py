@@ -135,7 +135,8 @@ class TrilingualEntityExtractor:
             'ner': [['B-ORG', 'I-ORG'], ...]
         }
         """
-        result = self.hanlp(text, tasks="ner")
+        # Request both tok (tokenization) and ner (named entity recognition)
+        result = self.hanlp(text, tasks=["tok", "ner"])
 
         entities = []
         current_entity = []

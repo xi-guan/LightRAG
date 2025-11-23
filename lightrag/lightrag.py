@@ -2208,7 +2208,9 @@ class LightRAG:
                 if "addon_params" not in config:
                     config["addon_params"] = {}
                 config["addon_params"]["language"] = doc_language
-                logger.info(f"Overriding language to '{doc_language}' for document-level entity extraction")
+                logger.info(
+                    f"Overriding language to '{doc_language}' for document-level entity extraction"
+                )
 
             chunk_results = await extract_entities(
                 chunk,

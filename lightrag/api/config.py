@@ -464,28 +464,41 @@ def parse_args() -> argparse.Namespace:
             "LIGHTRAG_LLM_OPENAI_MODEL", "LLM_MODEL", "gpt-4o-mini"
         )
         args.llm_binding_api_key = get_env_value_with_fallback(
-            "LIGHTRAG_LLM_OPENAI_API_KEY", "LLM_BINDING_API_KEY", None, special_none=True
+            "LIGHTRAG_LLM_OPENAI_API_KEY",
+            "LLM_BINDING_API_KEY",
+            None,
+            special_none=True,
         )
         args.llm_binding_host = get_env_value_with_fallback(
-            "LIGHTRAG_LLM_OPENAI_BASE_URL", "LLM_BINDING_HOST", "https://api.openai.com/v1"
+            "LIGHTRAG_LLM_OPENAI_BASE_URL",
+            "LLM_BINDING_HOST",
+            "https://api.openai.com/v1",
         )
     elif llm_provider == "azure_openai":
         args.llm_model = get_env_value_with_fallback(
             "LIGHTRAG_LLM_AZURE_OPENAI_MODEL", "LLM_MODEL", "gpt-4"
         )
         args.llm_binding_api_key = get_env_value_with_fallback(
-            "LIGHTRAG_LLM_AZURE_OPENAI_API_KEY", "LLM_BINDING_API_KEY", None, special_none=True
+            "LIGHTRAG_LLM_AZURE_OPENAI_API_KEY",
+            "LLM_BINDING_API_KEY",
+            None,
+            special_none=True,
         )
         args.llm_binding_host = get_env_value_with_fallback(
             "LIGHTRAG_LLM_AZURE_OPENAI_ENDPOINT", "LLM_BINDING_HOST", ""
         )
-        args.azure_deployment = get_env_value("LIGHTRAG_LLM_AZURE_OPENAI_DEPLOYMENT", "")
+        args.azure_deployment = get_env_value(
+            "LIGHTRAG_LLM_AZURE_OPENAI_DEPLOYMENT", ""
+        )
     elif llm_provider == "anthropic":
         args.llm_model = get_env_value_with_fallback(
             "LIGHTRAG_LLM_ANTHROPIC_MODEL", "LLM_MODEL", "claude-3-sonnet-20240229"
         )
         args.llm_binding_api_key = get_env_value_with_fallback(
-            "LIGHTRAG_LLM_ANTHROPIC_API_KEY", "LLM_BINDING_API_KEY", None, special_none=True
+            "LIGHTRAG_LLM_ANTHROPIC_API_KEY",
+            "LLM_BINDING_API_KEY",
+            None,
+            special_none=True,
         )
         args.llm_binding_host = "https://api.anthropic.com"
     elif llm_provider == "gemini":
@@ -493,7 +506,10 @@ def parse_args() -> argparse.Namespace:
             "LIGHTRAG_LLM_GEMINI_MODEL", "LLM_MODEL", "gemini-pro"
         )
         args.llm_binding_api_key = get_env_value_with_fallback(
-            "LIGHTRAG_LLM_GEMINI_API_KEY", "LLM_BINDING_API_KEY", None, special_none=True
+            "LIGHTRAG_LLM_GEMINI_API_KEY",
+            "LLM_BINDING_API_KEY",
+            None,
+            special_none=True,
         )
         args.llm_binding_host = "https://generativelanguage.googleapis.com"
     else:
@@ -515,7 +531,9 @@ def parse_args() -> argparse.Namespace:
             "LIGHTRAG_EMBEDDING_OLLAMA_MODEL", "EMBEDDING_MODEL", "bge-m3:latest"
         )
         args.embedding_binding_host = get_env_value_with_fallback(
-            "LIGHTRAG_EMBEDDING_OLLAMA_HOST", "EMBEDDING_BINDING_HOST", "http://localhost:11434"
+            "LIGHTRAG_EMBEDDING_OLLAMA_HOST",
+            "EMBEDDING_BINDING_HOST",
+            "http://localhost:11434",
         )
         args.embedding_dim = get_env_value_with_fallback(
             "LIGHTRAG_EMBEDDING_OLLAMA_DIMENSION", "EMBEDDING_DIM", 1024, int
@@ -523,20 +541,26 @@ def parse_args() -> argparse.Namespace:
         args.embedding_binding_api_key = ""  # Ollama doesn't need API key
     elif embedding_provider == "openai":
         args.embedding_model = get_env_value_with_fallback(
-            "LIGHTRAG_EMBEDDING_OPENAI_MODEL", "EMBEDDING_MODEL", "text-embedding-3-small"
+            "LIGHTRAG_EMBEDDING_OPENAI_MODEL",
+            "EMBEDDING_MODEL",
+            "text-embedding-3-small",
         )
         args.embedding_binding_api_key = get_env_value_with_fallback(
             "LIGHTRAG_EMBEDDING_OPENAI_API_KEY", "EMBEDDING_BINDING_API_KEY", ""
         )
         args.embedding_binding_host = get_env_value_with_fallback(
-            "LIGHTRAG_EMBEDDING_OPENAI_BASE_URL", "EMBEDDING_BINDING_HOST", "https://api.openai.com/v1"
+            "LIGHTRAG_EMBEDDING_OPENAI_BASE_URL",
+            "EMBEDDING_BINDING_HOST",
+            "https://api.openai.com/v1",
         )
         args.embedding_dim = get_env_value_with_fallback(
             "LIGHTRAG_EMBEDDING_OPENAI_DIMENSION", "EMBEDDING_DIM", 1536, int
         )
     elif embedding_provider == "jina":
         args.embedding_model = get_env_value_with_fallback(
-            "LIGHTRAG_EMBEDDING_JINA_MODEL", "EMBEDDING_MODEL", "jina-embeddings-v2-base-en"
+            "LIGHTRAG_EMBEDDING_JINA_MODEL",
+            "EMBEDDING_MODEL",
+            "jina-embeddings-v2-base-en",
         )
         args.embedding_binding_api_key = get_env_value_with_fallback(
             "LIGHTRAG_EMBEDDING_JINA_API_KEY", "EMBEDDING_BINDING_API_KEY", ""
@@ -551,7 +575,9 @@ def parse_args() -> argparse.Namespace:
             "LIGHTRAG_EMBEDDING_MODEL", "EMBEDDING_MODEL", "bge-m3:latest"
         )
         args.embedding_binding_host = get_env_value_with_fallback(
-            "LIGHTRAG_EMBEDDING_BASE_URL", "EMBEDDING_BINDING_HOST", get_default_host(embedding_provider)
+            "LIGHTRAG_EMBEDDING_BASE_URL",
+            "EMBEDDING_BINDING_HOST",
+            get_default_host(embedding_provider),
         )
         args.embedding_binding_api_key = get_env_value_with_fallback(
             "LIGHTRAG_EMBEDDING_API_KEY", "EMBEDDING_BINDING_API_KEY", ""
@@ -652,7 +678,10 @@ def parse_args() -> argparse.Namespace:
             "LIGHTRAG_RERANK_COHERE_MODEL", "RERANK_MODEL", "rerank-english-v2.0"
         )
         args.rerank_binding_api_key = get_env_value_with_fallback(
-            "LIGHTRAG_RERANK_COHERE_API_KEY", "RERANK_BINDING_API_KEY", None, special_none=True
+            "LIGHTRAG_RERANK_COHERE_API_KEY",
+            "RERANK_BINDING_API_KEY",
+            None,
+            special_none=True,
         )
         args.rerank_binding_host = "https://api.cohere.ai"
     elif rerank_provider == "jina":
@@ -660,7 +689,10 @@ def parse_args() -> argparse.Namespace:
             "LIGHTRAG_RERANK_JINA_MODEL", "RERANK_MODEL", "jina-reranker-v1-base-en"
         )
         args.rerank_binding_api_key = get_env_value_with_fallback(
-            "LIGHTRAG_RERANK_JINA_API_KEY", "RERANK_BINDING_API_KEY", None, special_none=True
+            "LIGHTRAG_RERANK_JINA_API_KEY",
+            "RERANK_BINDING_API_KEY",
+            None,
+            special_none=True,
         )
         args.rerank_binding_host = "https://api.jina.ai"
     elif rerank_provider == "aliyun":
@@ -668,7 +700,10 @@ def parse_args() -> argparse.Namespace:
             "LIGHTRAG_RERANK_ALIYUN_MODEL", "RERANK_MODEL", "gte-rerank"
         )
         args.rerank_binding_api_key = get_env_value_with_fallback(
-            "LIGHTRAG_RERANK_ALIYUN_API_KEY", "RERANK_BINDING_API_KEY", None, special_none=True
+            "LIGHTRAG_RERANK_ALIYUN_API_KEY",
+            "RERANK_BINDING_API_KEY",
+            None,
+            special_none=True,
         )
         args.rerank_binding_host = "https://dashscope.aliyuncs.com"
     else:  # null or unknown provider
