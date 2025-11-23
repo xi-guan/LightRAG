@@ -2979,7 +2979,9 @@ async def extract_entities(
                 # Call custom extractor with normalized language code
                 # Convert language name (e.g., "English") to ISO code (e.g., "en")
                 normalized_language = _normalize_language_code(language)
-                entities = custom_extractor.extract(content, language=normalized_language)
+                entities = custom_extractor.extract(
+                    content, language=normalized_language
+                )
 
                 if entities and len(entities) > 0:
                     # Convert custom extractor output to LLM format
