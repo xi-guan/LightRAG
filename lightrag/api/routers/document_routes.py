@@ -1556,7 +1556,10 @@ async def pipeline_enqueue_file(
 
             try:
                 await rag.apipeline_enqueue_documents(
-                    content, file_paths=file_path.name, track_id=track_id, language=language
+                    content,
+                    file_paths=file_path.name,
+                    track_id=track_id,
+                    language=language,
                 )
 
                 logger.info(
